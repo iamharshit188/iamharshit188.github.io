@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Harshit Tiwari | Portfolio</title>
-    
-    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. Configure Tailwind for Dark Mode -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -25,41 +21,41 @@
             }
         }
     </script>
-    
-    <!-- 3. Load React & ReactDOM (UMD - works without server) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-    <!-- 4. Load Babel for JSX processing -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
       .font-display { font-family: 'Archivo Black', sans-serif; }
       .font-mono { font-family: 'Space Mono', monospace; }
-      
       html { scroll-behavior: smooth; }
-      
-      /* Custom Scrollbar */
+
       ::-webkit-scrollbar { width: 12px; }
       ::-webkit-scrollbar-track { background: #ffffff; border-left: 3px solid #000000; }
       .dark ::-webkit-scrollbar-track { background: #000000; border-left: 3px solid #ffffff; }
-
       ::-webkit-scrollbar-thumb { background: #EBFF00; border: 3px solid #000000; }
       .dark ::-webkit-scrollbar-thumb { background: #EBFF00; border: 3px solid #ffffff; }
-
       ::-webkit-scrollbar-thumb:hover { background: #FF00FF; }
 
-      /* Marquee Animation */
       @keyframes marquee {
         0% { transform: translateX(0); }
         100% { transform: translateX(-50%); }
       }
       .animate-marquee { animation: marquee 20s linear infinite; }
       
-      /* Grid Pattern */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn { animation: fadeIn 0.25s ease forwards; }
+
+      @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.95) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      .animate-modalIn { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
       .bg-grid-pattern {
         background-image: 
           linear-gradient(to right, #e5e7eb 1px, transparent 1px),
@@ -71,20 +67,28 @@
           linear-gradient(to right, #333333 1px, transparent 1px),
           linear-gradient(to bottom, #333333 1px, transparent 1px);
       }
+
+      /* Modal scrollbar */
+      .modal-scroll::-webkit-scrollbar { width: 8px; }
+      .modal-scroll::-webkit-scrollbar-track { background: #fff; border-left: 2px solid #000; }
+      .dark .modal-scroll::-webkit-scrollbar-track { background: #111; border-left: 2px solid #fff; }
+      .modal-scroll::-webkit-scrollbar-thumb { background: #FF00FF; border: 2px solid #000; }
+      .dark .modal-scroll::-webkit-scrollbar-thumb { background: #EBFF00; border: 2px solid #fff; }
+
+      .repo-card:hover { transform: translate(-3px, -3px); }
+      .repo-card { transition: transform 0.15s ease; }
     </style>
 </head>
 <body class="bg-white text-black dark:bg-[#0a0a0a] dark:text-white transition-colors duration-300">
     <div id="root"></div>
 
     <script type="text/babel">
-        // Destructure hooks from global React object
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useCallback } = React;
 
-        // --- INLINE ICONS ---
+        // --- ICONS ---
         const Icon = ({ path, size = 24, className = "", strokeWidth = 2 }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
-
         const Github = (p) => <Icon {...p} path={<><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></>} />;
         const Linkedin = (p) => <Icon {...p} path={<><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></>} />;
         const Mail = (p) => <Icon {...p} path={<><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>} />;
@@ -95,28 +99,232 @@
         const ChevronDown = (p) => <Icon {...p} path={<polyline points="6 9 12 15 18 9"/>} />;
         const Moon = (p) => <Icon {...p} path={<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>} />;
         const Sun = (p) => <Icon {...p} path={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>} />;
-        
-        // ---------------------------------------------------------------------
+        const Star = (p) => <Icon {...p} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />;
+        const X = (p) => <Icon {...p} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+        const GitFork = (p) => <Icon {...p} path={<><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v2c0 .6.4 1 1 1h8a1 1 0 0 0 1-1V9"/><line x1="12" y1="12" x2="12" y2="15"/></>} />;
+        const Layers = (p) => <Icon {...p} path={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>} />;
 
+        // LANG COLOR MAP
+        const langColors = {
+            "JavaScript": "#f1e05a", "TypeScript": "#2b7489", "Python": "#3572A5",
+            "Dart": "#00B4AB", "C": "#555555", "C++": "#f34b7d", "Java": "#b07219",
+            "HTML": "#e34c26", "CSS": "#563d7c", "Shell": "#89e051", "Rust": "#dea584",
+            "Go": "#00ADD8", "Kotlin": "#F18E33", "Swift": "#ffac45",
+            "Jupyter Notebook": "#DA5B0B", "Ruby": "#701516", "Solidity": "#AA6746",
+        };
+
+        // ─── EXPLORE MORE MODAL ───────────────────────────────────────────────
+        const ExploreModal = ({ onClose, isDark }) => {
+            const [repos, setRepos] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [filter, setFilter] = useState('');
+            const [langFilter, setLangFilter] = useState('ALL');
+
+            useEffect(() => {
+                const fetchRepos = async () => {
+                    try {
+                        const res = await fetch('https://api.github.com/users/iamharshit188/repos?sort=updated&per_page=100');
+                        if (!res.ok) throw new Error('GitHub API error');
+                        const data = await res.json();
+                        // Only own repos, not forks
+                        const own = data.filter(r => !r.fork);
+                        // Sort by stars desc
+                        own.sort((a, b) => b.stargazers_count - a.stargazers_count);
+                        setRepos(own);
+                    } catch(e) {
+                        setError('Could not load repos. Check your connection.');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchRepos();
+
+                // Close on ESC
+                const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+                window.addEventListener('keydown', handleKey);
+                return () => window.removeEventListener('keydown', handleKey);
+            }, []);
+
+            const languages = ['ALL', ...Array.from(new Set(repos.map(r => r.language).filter(Boolean)))];
+
+            const filtered = repos.filter(r => {
+                const matchesSearch = r.name.toLowerCase().includes(filter.toLowerCase()) ||
+                    (r.description || '').toLowerCase().includes(filter.toLowerCase());
+                const matchesLang = langFilter === 'ALL' || r.language === langFilter;
+                return matchesSearch && matchesLang;
+            });
+
+            return (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                    style={{ background: 'rgba(0,0,0,0.75)' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+                >
+                    <div className="animate-modalIn w-full max-w-5xl max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-[3px] border-black dark:border-white shadow-[10px_10px_0px_0px_#FF00FF] flex flex-col">
+                        
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between border-b-[3px] border-black dark:border-white p-4 md:p-6 bg-[#EBFF00] flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                <Layers size={28} className="text-black" />
+                                <div>
+                                    <h2 className="font-display text-2xl md:text-3xl uppercase text-black leading-none">All Projects</h2>
+                                    <p className="font-mono text-xs text-black mt-0.5">github.com/iamharshit188 — own repos only</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={onClose}
+                                className="border-[3px] border-black p-1.5 bg-white hover:bg-[#FF00FF] hover:text-white transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                            >
+                                <X size={22} className="text-black" />
+                            </button>
+                        </div>
+
+                        {/* Filters */}
+                        {!loading && !error && (
+                            <div className="flex flex-col sm:flex-row gap-3 p-4 border-b-[3px] border-black dark:border-white bg-gray-50 dark:bg-[#111] flex-shrink-0">
+                                <input
+                                    type="text"
+                                    placeholder="SEARCH REPOS..."
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value)}
+                                    className="font-mono font-bold text-sm border-[2px] border-black dark:border-white px-3 py-2 bg-white dark:bg-[#0a0a0a] dark:text-white focus:outline-none focus:border-[#FF00FF] flex-1 uppercase placeholder:text-gray-400"
+                                />
+                                <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
+                                    {languages.slice(0, 8).map(lang => (
+                                        <button
+                                            key={lang}
+                                            onClick={() => setLangFilter(lang)}
+                                            className={`font-mono text-xs font-bold border-[2px] px-3 py-1 whitespace-nowrap transition-colors ${
+                                                langFilter === lang 
+                                                    ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white' 
+                                                    : 'border-black dark:border-white hover:bg-[#EBFF00] hover:text-black hover:border-black'
+                                            }`}
+                                        >
+                                            {lang}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto modal-scroll p-4 md:p-6">
+                            {loading && (
+                                <div className="flex flex-col items-center justify-center h-48 gap-4">
+                                    <div className="font-display text-2xl uppercase animate-pulse text-[#FF00FF]">LOADING...</div>
+                                    <div className="font-mono text-sm dark:text-gray-400">Fetching from GitHub API</div>
+                                </div>
+                            )}
+
+                            {error && (
+                                <div className="border-[3px] border-black dark:border-white p-6 bg-[#FF00FF] text-white">
+                                    <p className="font-display text-xl uppercase">{error}</p>
+                                </div>
+                            )}
+
+                            {!loading && !error && (
+                                <>
+                                    <p className="font-mono text-xs mb-4 text-gray-500 dark:text-gray-400 uppercase">
+                                        {filtered.length} repo{filtered.length !== 1 ? 's' : ''} found
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {filtered.map((repo) => (
+                                            <a 
+                                                key={repo.id}
+                                                href={repo.html_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="repo-card block border-[2px] border-black dark:border-white p-4 bg-white dark:bg-[#111] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_#FF00FF] dark:hover:shadow-[6px_6px_0px_0px_#EBFF00]"
+                                                style={{ textDecoration: 'none' }}
+                                            >
+                                                <div className="flex items-start justify-between mb-2 gap-2">
+                                                    <h3 className="font-display text-base uppercase leading-tight text-black dark:text-white break-all">
+                                                        {repo.name}
+                                                    </h3>
+                                                    <ExternalLink size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                                                </div>
+
+                                                {repo.description && (
+                                                    <p className="font-mono text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed line-clamp-2">
+                                                        {repo.description}
+                                                    </p>
+                                                )}
+
+                                                <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                    <div className="flex items-center gap-3">
+                                                        {repo.language && (
+                                                            <span className="flex items-center gap-1 font-mono text-xs font-bold">
+                                                                <span 
+                                                                    className="w-2.5 h-2.5 rounded-full border border-black dark:border-white"
+                                                                    style={{ background: langColors[repo.language] || '#888' }}
+                                                                ></span>
+                                                                {repo.language}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {repo.stargazers_count > 0 && (
+                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                                                                <Star size={11} /> {repo.stargazers_count}
+                                                            </span>
+                                                        )}
+                                                        {repo.forks_count > 0 && (
+                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                                                                <GitFork size={11} /> {repo.forks_count}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+
+                                    {filtered.length === 0 && (
+                                        <div className="text-center py-16">
+                                            <p className="font-display text-2xl uppercase text-gray-300 dark:text-gray-700">NO REPOS FOUND</p>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t-[3px] border-black dark:border-white p-3 bg-black dark:bg-white flex-shrink-0">
+                            <a 
+                                href="https://github.com/iamharshit188" 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="font-mono text-xs text-[#EBFF00] dark:text-black font-bold uppercase hover:underline flex items-center gap-2"
+                            >
+                                <Github size={14} /> View Full Profile on GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── MAIN COMPONENT ───────────────────────────────────────────────────
         const NeoPortfolio = () => {
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [isDark, setIsDark] = useState(false);
+            const [showExplore, setShowExplore] = useState(false);
 
-            // Toggle Dark Mode
             useEffect(() => {
-                if (isDark) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
             }, [isDark]);
 
+            // Prevent body scroll when modal open
+            useEffect(() => {
+                document.body.style.overflow = showExplore ? 'hidden' : '';
+                return () => { document.body.style.overflow = ''; };
+            }, [showExplore]);
+
             const scrollToSection = (id) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth' });
-                    setIsMenuOpen(false);
-                }
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                setIsMenuOpen(false);
             };
 
             const skills = {
@@ -127,132 +335,139 @@
 
             const experience = [
                 {
-                    company: "Felicita",
-                    role: "Frontend Developer",
-                    date: "Sep 2023 - Jan 2024",
-                    description: "Architected interactive UIs using React.js. Enhanced app performance by 25% through component optimization and lazy loading."
+                    company: "WaterPlane",
+                    role: "Co-Founder",
+                    date: "Jul 2025 – Present",
+                    type: "Full-time",
+                    skills: ["Start-up Leadership", "Start-up Ventures"],
+                    description: "Co-founding a deep-tech startup focused on building AI-driven environmental monitoring solutions. Leading product vision, engineering roadmap, and team growth."
                 },
                 {
-                    company: "Samvadi (Dainik Jagran)",
-                    role: "Digital Team Lead",
-                    date: "Aug 2023",
-                    description: "Led a 20-member team managing digital campaigns. Increased social engagement by 50% via data-driven strategies."
+                    company: "Lucknow Super Giants",
+                    role: "Management Team Member",
+                    date: "Mar 2025 – Jun 2025",
+                    type: "Part-time · On-site",
+                    skills: ["Infrastructure Management"],
+                    description: "Volunteered with Swapna Foundation to lead deployment and management of infrastructure solutions, enhancing the overall fan experience through innovative development and engagement strategies."
+                },
+                {
+                    company: "Dainik Jagran",
+                    role: "Email Campaign Manager",
+                    date: "Nov 2024 – Dec 2024",
+                    type: "Freelance · Hybrid",
+                    skills: ["SEO", "Email Distribution"],
+                    description: "Managed SMTP setup for brand invitation and collaboration. Successfully executed campaigns for 40+ brands and 20+ Professors and Directorates of IITs."
+                },
+                {
+                    company: "Felicita Films",
+                    role: "Senior Web Developer",
+                    date: "Mar 2023 – Dec 2023",
+                    type: "Internship · Remote",
+                    skills: ["Python", "E-Commerce"],
+                    description: "Managed and overlooked the development team, led deployment and scaling of production systems. Enhanced app performance by 25% through component optimization and lazy loading."
+                },
+                {
+                    company: "aosp-devs",
+                    role: "Android Engineer",
+                    date: "Apr 2018 – Jan 2023",
+                    type: "Freelance · Lucknow",
+                    skills: ["Android Framework", "Linux Kernel"],
+                    description: "Android ROM builder. Contributed to OSS Kernel Development team for OnePlus 9RT, Redmi Note 7, and Redmi Note 11. Deep expertise in Linux kernel and Android framework internals."
                 }
             ];
 
             const projects = [
                 {
                     title: "Vaayu Darshak",
-                    tags: ["Flutter", "Dart", "LSTM+ARIMA", "Node.js"],
-                    description: "Hyperlocal air quality app visualizing real-time data using ISRO satellite imagery. Features a Hybrid ML model forecasting pollution trends 72h ahead.",
+                    tags: ["Flutter", "Dart", "LSTM+ARIMA", "Node.js", "ISRO"],
+                    description: "Hyperlocal air quality app visualizing real-time data using ISRO EOS-6 satellite imagery. Hybrid LSTM+ARIMA+CNN model forecasting pollution 72h ahead. Built for ISRO's BAH2025 Hackathon.",
                     color: "bg-[#EBFF00]",
-                    image: "https://picsum.photos/seed/vaayu/800/450"
+                    image: "https://picsum.photos/seed/vaayu/800/450",
+                    github: "https://github.com/iamharshit188/isro_hackathon-bah2025",
+                    badge: "ISRO HACKATHON"
                 },
                 {
                     title: "PsiFur AI",
                     tags: ["Python", "Manim", "LLMs", "Agentic AI"],
-                    description: "Agentic AI pipeline converting natural language queries into simulated physics videos. Automates code generation for the Manim engine.",
+                    description: "Agentic AI pipeline converting natural language queries into simulated physics videos. Automates code generation for the Manim engine. Winner at IIT Patna Celesta Hackathon.",
                     color: "bg-[#FF00FF]",
-                    image: "https://picsum.photos/seed/psifur/800/450"
+                    image: "https://picsum.photos/seed/psifur/800/450",
+                    github: "https://github.com/iamharshit188/Celesta_Hackathon",
+                    badge: "IIT PATNA WINNER"
                 },
                 {
                     title: "Siya Model",
                     tags: ["PyTorch", "BERT", "LSTM", "NLP"],
-                    description: "Claim detection model identifying factual claims in social media with 85% accuracy. Trained on 50,000+ posts using transfer learning.",
+                    description: "Claim detection model identifying factual claims in social media with 85% accuracy. Trained on 50,000+ posts using transfer learning. Finalist at IIT Kanpur NFRA Hackathon.",
                     color: "bg-[#00FFFF]",
-                    image: "https://picsum.photos/seed/siya/800/450"
+                    image: "https://picsum.photos/seed/siya/800/450",
+                    github: "https://github.com/Water-Plane/WaterPlane_PRAMAAN",
+                    badge: "IIT KANPUR FINALIST"
                 }
             ];
 
             const achievements = [
-                {
-                    title: "Winner - Celesta Hackathon",
-                    org: "IIT Patna",
-                    desc: "1st Place among 50+ teams. Built innovative AI-driven tech solution."
-                },
-                {
-                    title: "Winner - Samsung Hackathon",
-                    org: "BBD University",
-                    desc: "Created AI-driven web app for agricultural advancement."
-                },
-                {
-                    title: "Finalist - NFRA Finance Hackathon",
-                    org: "IIT Kanpur",
-                    desc: "GenAI solution for simplifying financial statements."
-                },
-                {
-                    title: "Finalist - Vault Heist",
-                    org: "CGC Mohali",
-                    desc: "Top finalist among 300+ teams in cybersecurity hackathon."
-                }
+                { title: "Winner - Celesta Hackathon", org: "IIT Patna", desc: "1st Place among 50+ teams. Built innovative AI-driven tech solution." },
+                { title: "Winner - Samsung Hackathon", org: "BBD University", desc: "Created AI-driven web app for agricultural advancement." },
+                { title: "Finalist - NFRA Finance Hackathon", org: "IIT Kanpur", desc: "GenAI solution for simplifying financial statements." },
+                { title: "Finalist - Vault Heist", org: "CGC Mohali", desc: "Top finalist among 300+ teams in cybersecurity hackathon." }
             ];
 
-            const NeoButton = ({ children, onClick, className = "", variant = "primary" }) => {
-                const baseStyle = "border-[3px] border-black dark:border-white font-bold px-6 py-3 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-mono uppercase tracking-wider text-sm sm:text-base";
+            const NeoButton = ({ children, onClick, className = "", variant = "primary", as: Tag = "button", href, target, rel }) => {
+                const baseStyle = "border-[3px] border-black dark:border-white font-bold px-6 py-3 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none font-mono uppercase tracking-wider text-sm sm:text-base cursor-pointer";
                 const variants = {
                     primary: "bg-[#EBFF00] text-black hover:bg-[#d4e600] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]",
                     secondary: "bg-white text-black dark:bg-[#2a2a2a] dark:text-white hover:bg-gray-50 dark:hover:bg-[#333] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]",
                     dark: "bg-black text-white dark:bg-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200 shadow-[4px_4px_0px_0px_#EBFF00] dark:shadow-[4px_4px_0px_0px_#FF00FF]"
                 };
+                if (Tag === 'a') {
+                    return <a href={href} target={target} rel={rel} className={`inline-flex items-center ${baseStyle} ${variants[variant]} ${className}`}>{children}</a>;
+                }
                 return <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>{children}</button>;
             };
 
             return (
                 <div className="min-h-screen font-sans overflow-x-hidden transition-colors duration-300">
+
+                    {/* Explore More Modal */}
+                    {showExplore && <ExploreModal onClose={() => setShowExplore(false)} isDark={isDark} />}
+
                     {/* Navbar */}
                     <nav className="fixed top-0 w-full z-50 bg-white dark:bg-[#0a0a0a] border-b-[3px] border-black dark:border-white px-4 py-3 md:px-8 transition-colors duration-300">
                         <div className="max-w-7xl mx-auto flex justify-between items-center">
                             <div className="text-xl md:text-2xl font-display uppercase tracking-tighter">
                                 HT<span className="text-[#FF00FF]">.</span>DEV
                             </div>
-                            
-                            {/* Desktop Menu */}
                             <div className="flex items-center gap-6">
                                 <div className="hidden md:flex gap-6 font-mono font-bold text-sm">
                                     {['Home', 'Projects', 'Experience', 'Contact'].map((item) => (
-                                        <button 
-                                            key={item}
-                                            onClick={() => scrollToSection(item.toLowerCase())}
-                                            className="hover:underline decoration-[3px] decoration-[#FF00FF] underline-offset-4 uppercase"
-                                        >
+                                        <button key={item} onClick={() => scrollToSection(item.toLowerCase())}
+                                            className="hover:underline decoration-[3px] decoration-[#FF00FF] underline-offset-4 uppercase">
                                             {item}
                                         </button>
                                     ))}
                                 </div>
-
-                                {/* Dark Mode Toggle */}
                                 <div className="relative flex items-center">
                                     <span className="hidden lg:block absolute right-full mr-3 whitespace-nowrap font-mono text-xs font-bold bg-[#FF00FF] text-white px-2 py-1 border border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] pointer-events-none transform rotate-2">
                                         {isDark ? "RETINA BURN?" : "ENTER THE VOID ->"}
                                     </span>
-                                    <button 
-                                        onClick={() => setIsDark(!isDark)}
+                                    <button onClick={() => setIsDark(!isDark)}
                                         className="p-2 border-[2px] border-black dark:border-white hover:bg-gray-100 dark:hover:bg-[#333] transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
-                                        aria-label="Toggle Dark Mode"
-                                    >
+                                        aria-label="Toggle Dark Mode">
                                         {isDark ? <Sun size={20} /> : <Moon size={20} />}
                                     </button>
                                 </div>
-
-                                {/* Mobile Menu Button */}
-                                <button 
-                                    className="md:hidden border-[3px] border-black dark:border-white p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
-                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                >
+                                <button className="md:hidden border-[3px] border-black dark:border-white p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"
+                                    onClick={() => setIsMenuOpen(!isMenuOpen)}>
                                     <ChevronDown size={24} />
                                 </button>
                             </div>
                         </div>
-
-                        {/* Mobile Menu Dropdown */}
                         {isMenuOpen && (
                             <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-[#0a0a0a] border-b-[3px] border-black dark:border-white p-4 flex flex-col gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
                                 {['Home', 'Projects', 'Experience', 'Contact'].map((item) => (
-                                    <button 
-                                        key={item}
-                                        onClick={() => scrollToSection(item.toLowerCase())}
-                                        className="text-left font-mono font-bold uppercase hover:bg-[#EBFF00] dark:hover:bg-[#EBFF00] dark:hover:text-black p-2 border-[2px] border-transparent hover:border-black dark:hover:border-black transition-all"
-                                    >
+                                    <button key={item} onClick={() => scrollToSection(item.toLowerCase())}
+                                        className="text-left font-mono font-bold uppercase hover:bg-[#EBFF00] dark:hover:bg-[#EBFF00] dark:hover:text-black p-2 border-[2px] border-transparent hover:border-black dark:hover:border-black transition-all">
                                         {item}
                                     </button>
                                 ))}
@@ -260,27 +475,22 @@
                         )}
                     </nav>
 
-                    {/* Hero Section */}
+                    {/* Hero */}
                     <section id="home" className="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
                         <div className="border-[3px] border-black dark:border-white p-6 md:p-12 shadow-[8px_8px_0px_0px_#FF00FF] bg-white dark:bg-[#111] relative transition-colors duration-300">
                             <div className="absolute -top-6 -left-3 bg-[#EBFF00] border-[3px] border-black dark:border-white px-4 py-1 font-mono font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] transform -rotate-2 text-black">
                                 AVAILABLE FOR WORK
                             </div>
-                            
                             <h1 className="text-5xl md:text-7xl lg:text-9xl font-display leading-[0.9] mb-6 uppercase">
                                 Harshit<br/>
-                                <span className="text-transparent bg-clip-text bg-black dark:bg-white" style={{WebkitTextStroke: isDark ? '2px white' : '2px black', color: 'transparent'}}>Tiwari</span>
+                                <span style={{WebkitTextStroke: isDark ? '2px white' : '2px black', color: 'transparent'}}>Tiwari</span>
                             </h1>
-                            
                             <p className="font-mono text-lg md:text-xl max-w-2xl mb-8 leading-relaxed border-l-[6px] border-[#EBFF00] pl-6 py-2 bg-gray-50 dark:bg-[#222]">
                                 Full Stack Developer, AI Engineer, and Open Source Contributor based in Lucknow. 
                                 Obsessed with <span className="font-bold bg-[#FF00FF] text-white px-1">Linux Kernels</span>, <span className="font-bold bg-black dark:bg-white text-white dark:text-black px-1">Agentic AI</span>, and building systems that scale.
                             </p>
-
                             <div className="flex flex-wrap gap-4">
-                                <NeoButton onClick={() => scrollToSection('projects')} variant="dark">
-                                    View Work
-                                </NeoButton>
+                                <NeoButton onClick={() => scrollToSection('projects')} variant="dark">View Work</NeoButton>
                                 <NeoButton onClick={() => window.open('https://github.com/iamharshit188', '_blank')} variant="secondary" className="flex items-center gap-2">
                                     <Github size={20} /> GitHub
                                 </NeoButton>
@@ -293,38 +503,23 @@
                         {/* Marquee */}
                         <div className="mt-20 overflow-hidden border-y-[3px] border-black dark:border-white bg-[#EBFF00] py-3 rotate-1 mx-[-50vw] w-[200vw]">
                             <div className="whitespace-nowrap animate-marquee font-display text-2xl md:text-4xl uppercase tracking-widest text-black flex gap-12">
-                                <span>Open Source</span>
-                                <span>•</span>
-                                <span>Full Stack</span>
-                                <span>•</span>
-                                <span>Artificial Intelligence</span>
-                                <span>•</span>
-                                <span>Systems Engineering</span>
-                                <span>•</span>
-                                <span>Open Source</span>
-                                <span>•</span>
-                                <span>Full Stack</span>
-                                <span>•</span>
-                                <span>Artificial Intelligence</span>
-                                <span>•</span>
-                                <span>Systems Engineering</span>
+                                <span>Open Source</span><span>•</span><span>Full Stack</span><span>•</span>
+                                <span>Artificial Intelligence</span><span>•</span><span>Systems Engineering</span><span>•</span>
+                                <span>Open Source</span><span>•</span><span>Full Stack</span><span>•</span>
+                                <span>Artificial Intelligence</span><span>•</span><span>Systems Engineering</span>
                             </div>
                         </div>
                     </section>
 
-                    {/* Skills Section */}
+                    {/* Skills */}
                     <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto border-x-[3px] border-black dark:border-white bg-grid-pattern transition-colors duration-300">
                         <h2 className="text-4xl md:text-6xl font-display mb-12 uppercase flex items-center gap-4">
-                            <Terminal size={48} className="text-[#FF00FF]" /> 
-                            Technical Expertise
+                            <Terminal size={48} className="text-[#FF00FF]" /> Technical Expertise
                         </h2>
-
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {Object.entries(skills).map(([category, items], idx) => (
+                            {Object.entries(skills).map(([category, items]) => (
                                 <div key={category} className="border-[3px] border-black dark:border-white p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-[#111] hover:-translate-y-1 transition-all">
-                                    <h3 className="font-display text-2xl uppercase mb-6 bg-black dark:bg-white text-white dark:text-black inline-block px-2 py-1 transform -rotate-1">
-                                        {category}
-                                    </h3>
+                                    <h3 className="font-display text-2xl uppercase mb-6 bg-black dark:bg-white text-white dark:text-black inline-block px-2 py-1 transform -rotate-1">{category}</h3>
                                     <div className="flex flex-wrap gap-3">
                                         {items.map(skill => (
                                             <span key={skill} className="font-mono font-bold text-sm border-[2px] border-black dark:border-white px-3 py-1 bg-gray-50 dark:bg-[#222] hover:bg-[#EBFF00] dark:hover:bg-[#EBFF00] dark:hover:text-black transition-colors cursor-default">
@@ -337,7 +532,7 @@
                         </div>
                     </section>
 
-                    {/* Projects Section */}
+                    {/* Projects */}
                     <section id="projects" className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
                         <div className="flex justify-between items-end mb-12">
                             <h2 className="text-4xl md:text-6xl font-display uppercase leading-none">
@@ -352,6 +547,12 @@
                                     <div className={`absolute inset-0 ${project.color} border-[3px] border-black dark:border-white transform translate-x-3 translate-y-3 md:translate-x-5 md:translate-y-5 transition-transform group-hover:translate-x-2 group-hover:translate-y-2`}></div>
                                     <div className="relative bg-white dark:bg-[#111] border-[3px] border-black dark:border-white p-6 md:p-10 flex flex-col md:flex-row gap-8 items-start">
                                         <div className="flex-1">
+                                            {/* Badge */}
+                                            <div className="inline-block mb-3">
+                                                <span className="font-mono text-xs font-bold bg-black dark:bg-white text-white dark:text-black px-2 py-1 uppercase tracking-wider">
+                                                    {project.badge}
+                                                </span>
+                                            </div>
                                             <div className="flex flex-wrap gap-2 mb-4">
                                                 {project.tags.map(tag => (
                                                     <span key={tag} className="font-mono text-xs font-bold border border-black dark:border-white px-2 py-0.5 uppercase bg-white dark:bg-black text-black dark:text-white">
@@ -365,47 +566,116 @@
                                             <p className="font-mono text-base md:text-lg mb-6 leading-relaxed border-l-4 border-black dark:border-white pl-4 text-gray-800 dark:text-gray-300">
                                                 {project.description}
                                             </p>
-                                            <div className="flex gap-4">
-                                                <button className="flex items-center gap-2 font-mono font-bold text-sm uppercase underline decoration-2 underline-offset-4 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors px-2 py-1">
-                                                    View Case Study <ExternalLink size={16} />
-                                                </button>
+                                            <div className="flex gap-4 flex-wrap">
+                                                <a 
+                                                    href={project.github} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 bg-black dark:bg-white text-white dark:text-black hover:bg-[#FF00FF] hover:border-[#FF00FF] dark:hover:bg-[#FF00FF] dark:hover:text-white dark:hover:border-[#FF00FF] transition-colors shadow-[3px_3px_0px_0px_#EBFF00] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                                                >
+                                                    <Github size={16} /> View Case Study
+                                                </a>
+                                                <a
+                                                    href={project.github}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 hover:bg-[#EBFF00] hover:text-black hover:border-black transition-colors"
+                                                >
+                                                    <ExternalLink size={15} /> Source Code
+                                                </a>
                                             </div>
                                         </div>
                                         <div className="w-full md:w-1/3 border-[3px] border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-                                            <img 
-                                                src={project.image} 
-                                                alt={project.title} 
-                                                className="w-full h-auto object-cover aspect-video grayscale hover:grayscale-0 transition-all duration-300"
-                                            />
+                                            <img src={project.image} alt={project.title} className="w-full h-auto object-cover aspect-video grayscale hover:grayscale-0 transition-all duration-300" />
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
+
+                        {/* ── EXPLORE MORE ─────────────────────────────────────── */}
+                        <div className="mt-20 border-[3px] border-black dark:border-white p-8 md:p-12 bg-black dark:bg-white shadow-[8px_8px_0px_0px_#EBFF00] text-center relative overflow-hidden">
+                            {/* Decorative grid bg */}
+                            <div className="absolute inset-0 opacity-10"
+                                style={{
+                                    backgroundImage: 'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
+                                    backgroundSize: '32px 32px'
+                                }}
+                            ></div>
+                            <div className="relative z-10">
+                                <div className="inline-block bg-[#FF00FF] border-[3px] border-white dark:border-black px-4 py-1 font-mono font-bold text-sm text-white dark:text-black uppercase mb-6 transform rotate-1">
+                                    79 REPOS & COUNTING
+                                </div>
+                                <h3 className="font-display text-4xl md:text-6xl uppercase text-white dark:text-black mb-4 leading-none">
+                                    There's More.<br/>
+                                    <span className="text-[#EBFF00]">A lot more.</span>
+                                </h3>
+                                <p className="font-mono text-base md:text-lg text-gray-400 dark:text-gray-600 mb-8 max-w-lg mx-auto">
+                                    From Linux kernel trees to LLMs from scratch — explore every project I've shipped on GitHub.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                    <button
+                                        onClick={() => setShowExplore(true)}
+                                        className="flex items-center gap-3 font-display text-xl uppercase border-[3px] border-white dark:border-black px-8 py-4 bg-[#EBFF00] text-black shadow-[6px_6px_0px_0px_#FF00FF] hover:shadow-[8px_8px_0px_0px_#FF00FF] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all"
+                                    >
+                                        <Layers size={24} />
+                                        Explore All Projects
+                                    </button>
+                                    <a
+                                        href="https://github.com/iamharshit188"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[3px] border-white dark:border-black px-6 py-4 text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors"
+                                    >
+                                        <Github size={18} /> Open GitHub Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     {/* Experience & Achievements */}
                     <section id="experience" className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">
-                                    Experience
-                                </h2>
-                                <div className="space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+                            <div className="lg:col-span-3">
+                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">Experience</h2>
+                                <div className="space-y-0 border-l-[3px] border-black dark:border-white ml-2">
                                     {experience.map((job, idx) => (
-                                        <div key={idx} className="relative pl-8 border-l-[3px] border-black dark:border-white">
-                                            <div className="absolute -left-[11px] top-0 w-5 h-5 bg-[#FF00FF] border-[3px] border-black dark:border-white"></div>
-                                            <h4 className="font-display text-xl uppercase">{job.role}</h4>
-                                            <div className="font-mono font-bold text-sm mb-2 text-gray-600 dark:text-gray-400">@ {job.company} | {job.date}</div>
-                                            <p className="font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-300">{job.description}</p>
+                                        <div key={idx} className="relative pl-8 pb-10 last:pb-0">
+                                            {/* Timeline dot */}
+                                            <div className="absolute -left-[11px] top-1 w-5 h-5 bg-[#FF00FF] border-[3px] border-black dark:border-white flex-shrink-0"></div>
+                                            
+                                            {/* Card */}
+                                            <div className="border-[3px] border-black dark:border-white bg-white dark:bg-[#111] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-0.5 transition-all">
+                                                {/* Card header stripe */}
+                                                <div className="bg-black dark:bg-white px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+                                                    <h4 className="font-display text-base md:text-lg uppercase text-white dark:text-black leading-none">{job.role}</h4>
+                                                    <span className="font-mono text-xs font-bold text-[#EBFF00] dark:text-[#FF00FF] uppercase">{job.type}</span>
+                                                </div>
+                                                {/* Card body */}
+                                                <div className="p-4">
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
+                                                        <span className="font-mono font-bold text-sm text-[#FF00FF]">@ {job.company}</span>
+                                                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 px-2 py-0.5">{job.date}</span>
+                                                    </div>
+                                                    <p className="font-mono text-xs md:text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-3">
+                                                        {job.description}
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {job.skills.map(s => (
+                                                            <span key={s} className="font-mono text-xs font-bold border-[2px] border-black dark:border-white px-2 py-0.5 bg-[#EBFF00] text-black uppercase">
+                                                                {s}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">
-                                    Hackathons
-                                </h2>
+                            <div className="lg:col-span-2">
+                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">Hackathons</h2>
                                 <div className="space-y-4">
                                     {achievements.map((award, idx) => (
                                         <div key={idx} className="border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_#EBFF00] dark:shadow-[4px_4px_0px_0px_#EBFF00] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all bg-white dark:bg-[#111]">
@@ -422,7 +692,7 @@
                         </div>
                     </section>
 
-                    {/* CTA */}
+                    {/* Contact CTA */}
                     <section id="contact" className="py-20 px-4 md:px-8 bg-[#FF00FF] border-t-[3px] border-black dark:border-white">
                         <div className="max-w-4xl mx-auto text-center">
                             <h2 className="text-5xl md:text-7xl font-display uppercase mb-8 text-white dark:text-black" style={{textShadow: isDark ? 'none' : '4px 4px 0px #000'}}>
@@ -434,14 +704,12 @@
                             <div className="flex flex-col md:flex-row justify-center gap-6">
                                 <a href="mailto:iamharshit188@gmail.com" className="group">
                                     <div className="bg-white dark:bg-black border-[3px] border-black dark:border-white px-8 py-4 flex items-center justify-center gap-3 font-display text-xl uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] group-active:translate-x-1 group-active:translate-y-1 group-active:shadow-none transition-all">
-                                        <Mail className="group-hover:rotate-12 transition-transform" /> 
-                                        Say Hello
+                                        <Mail className="group-hover:rotate-12 transition-transform" /> Say Hello
                                     </div>
                                 </a>
                                 <a href="https://linkedin.com/in/iamharshit188" target="_blank" rel="noreferrer" className="group">
                                     <div className="bg-[#EBFF00] border-[3px] border-black dark:border-white px-8 py-4 flex items-center justify-center gap-3 font-display text-xl text-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] group-active:translate-x-1 group-active:translate-y-1 group-active:shadow-none transition-all">
-                                        <Linkedin className="group-hover:-rotate-12 transition-transform" /> 
-                                        Connect
+                                        <Linkedin className="group-hover:-rotate-12 transition-transform" /> Connect
                                     </div>
                                 </a>
                             </div>
@@ -451,13 +719,13 @@
                     {/* Footer */}
                     <footer className="bg-black dark:bg-white text-white dark:text-black py-8 px-4 border-t-[3px] border-white dark:border-black">
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div className="font-mono text-sm">
-                                © 2026 HARSHIT TIWARI. All rights reserved.
-                            </div>
+                            <div className="font-mono text-sm">© 2026 HARSHIT TIWARI. All rights reserved.</div>
                             <div className="font-mono text-sm flex gap-4">
                                 <span className="hover:text-[#EBFF00] dark:hover:text-[#FF00FF] cursor-pointer">Local: Lucknow, UP</span>
                                 <span className="text-[#FF00FF] dark:text-[#000]">•</span>
-                                <span className="hover:text-[#EBFF00] dark:hover:text-[#FF00FF] cursor-pointer">Status: Online</span>
+                                <a href="https://github.com/iamharshit188" target="_blank" rel="noreferrer" className="hover:text-[#EBFF00] dark:hover:text-[#FF00FF] flex items-center gap-1">
+                                    <Github size={13} /> iamharshit188
+                                </a>
                             </div>
                         </div>
                     </footer>

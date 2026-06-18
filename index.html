@@ -25,7 +25,7 @@
     <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    
+
     <style>
       .font-display { font-family: 'Archivo Black', sans-serif; }
       .font-mono { font-family: 'Space Mono', monospace; }
@@ -43,7 +43,7 @@
         100% { transform: translateX(-50%); }
       }
       .animate-marquee { animation: marquee 20s linear infinite; }
-      
+
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(12px); }
         to { opacity: 1; transform: translateY(0); }
@@ -57,18 +57,17 @@
       .animate-modalIn { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
       .bg-grid-pattern {
-        background-image: 
+        background-image:
           linear-gradient(to right, #e5e7eb 1px, transparent 1px),
           linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
         background-size: 40px 40px;
       }
       .dark .bg-grid-pattern {
-        background-image: 
+        background-image:
           linear-gradient(to right, #333333 1px, transparent 1px),
           linear-gradient(to bottom, #333333 1px, transparent 1px);
       }
 
-      /* Modal scrollbar */
       .modal-scroll::-webkit-scrollbar { width: 8px; }
       .modal-scroll::-webkit-scrollbar-track { background: #fff; border-left: 2px solid #000; }
       .dark .modal-scroll::-webkit-scrollbar-track { background: #111; border-left: 2px solid #fff; }
@@ -77,13 +76,38 @@
 
       .repo-card:hover { transform: translate(-3px, -3px); }
       .repo-card { transition: transform 0.15s ease; }
+
+      @keyframes scanline {
+        0% { top: -2%; }
+        100% { top: 102%; }
+      }
+      .animate-scanline { animation: scanline 3s linear infinite; }
+
+      @keyframes glitch {
+        0%, 100% { transform: translate(0); }
+        20% { transform: translate(-3px, 2px); }
+        40% { transform: translate(3px, -2px); }
+        60% { transform: translate(-2px, 3px); }
+        80% { transform: translate(2px, -1px); }
+      }
+      .animate-glitch { animation: glitch 0.4s ease forwards; }
+
+      @keyframes kernelBoot {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-kernelBoot { animation: kernelBoot 0.08s ease forwards; }
+
+      .terminal-scroll::-webkit-scrollbar { width: 6px; }
+      .terminal-scroll::-webkit-scrollbar-track { background: #000; }
+      .terminal-scroll::-webkit-scrollbar-thumb { background: #00FF41; }
     </style>
 </head>
 <body class="bg-white text-black dark:bg-[#0a0a0a] dark:text-white transition-colors duration-300">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
         // --- ICONS ---
         const Icon = ({ path, size = 24, className = "", strokeWidth = 2 }) => (
@@ -104,13 +128,174 @@
         const GitFork = (p) => <Icon {...p} path={<><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M6 9v2c0 .6.4 1 1 1h8a1 1 0 0 0 1-1V9"/><line x1="12" y1="12" x2="12" y2="15"/></>} />;
         const Layers = (p) => <Icon {...p} path={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>} />;
 
-        // LANG COLOR MAP
         const langColors = {
             "JavaScript": "#f1e05a", "TypeScript": "#2b7489", "Python": "#3572A5",
             "Dart": "#00B4AB", "C": "#555555", "C++": "#f34b7d", "Java": "#b07219",
             "HTML": "#e34c26", "CSS": "#563d7c", "Shell": "#89e051", "Rust": "#dea584",
             "Go": "#00ADD8", "Kotlin": "#F18E33", "Swift": "#ffac45",
             "Jupyter Notebook": "#DA5B0B", "Ruby": "#701516", "Solidity": "#AA6746",
+        };
+
+        // ─── KERNEL MODE OVERLAY ──────────────────────────────────────────────
+        const KernelModeOverlay = ({ onClose }) => {
+            const lines = [
+                "> KERNEL MODE ACTIVATED",
+                "> USER: harshit@harshit-dev",
+                "> UID: 0 (ROOT)",
+                "> KERNEL: Linux 6.12.0-harshit-custom #7 SMP PREEMPT_RT",
+                "> UPTIME: 7 years, building since age 14",
+                "> CPU: Snapdragon SM6225 (patched by this guy)",
+                "> MODULES: pytorch llama3 yolov8 flutter supabase",
+                "> CURRENT_TASK: [WaterPlane AI] environmental_monitoring.py",
+                "> LAST_COMMIT: \"fine-tune llama3 on synthetic forensics dataset\"",
+                "> STATUS: all systems nominal ✓",
+                ">",
+                "> press [ESC] or click EXIT to return to userspace",
+            ];
+            const [visibleLines, setVisibleLines] = useState([]);
+            const [booting, setBooting] = useState(true);
+
+            useEffect(() => {
+                let i = 0;
+                const t = setInterval(() => {
+                    if (i < lines.length) {
+                        setVisibleLines(prev => [...prev, lines[i]]);
+                        i++;
+                    } else {
+                        setBooting(false);
+                        clearInterval(t);
+                    }
+                }, 80);
+                return () => clearInterval(t);
+            }, []);
+
+            useEffect(() => {
+                const h = (e) => { if (e.key === 'Escape') onClose(); };
+                window.addEventListener('keydown', h);
+                return () => window.removeEventListener('keydown', h);
+            }, []);
+
+            return (
+                <div className="fixed inset-0 z-[200] bg-black overflow-hidden" style={{fontFamily: 'Space Mono, monospace'}}>
+                    <div className="animate-scanline absolute left-0 w-full h-[2px] pointer-events-none" style={{background: 'rgba(0,255,65,0.4)'}}></div>
+                    <div className="h-full flex flex-col justify-between p-6 md:p-12 overflow-auto terminal-scroll">
+                        <div>
+                            <div className="text-[#00FF41] text-xs md:text-sm mb-6 opacity-60">
+                                BIOS v2.4 | BBD UNIVERSITY — HARSHIT TIWARI SYSTEMS
+                            </div>
+                            {visibleLines.map((line, i) => (
+                                <div key={i} className="animate-kernelBoot text-[#00FF41] text-sm md:text-base mb-1 leading-relaxed">
+                                    {line}
+                                </div>
+                            ))}
+                            {booting && <span className="text-[#00FF41] animate-pulse">_</span>}
+                        </div>
+                        <div className="mt-8">
+                            <button
+                                onClick={onClose}
+                                className="border-2 border-[#00FF41] text-[#00FF41] font-bold px-6 py-3 text-sm uppercase tracking-widest hover:bg-[#00FF41] hover:text-black transition-colors"
+                            >
+                                [ EXIT KERNEL MODE ]
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ─── SECRET TERMINAL ──────────────────────────────────────────────────
+        const SecretTerminal = ({ onClose }) => {
+            const [history, setHistory] = useState([
+                { type: 'system', text: 'harshit@portfolio terminal v1.0 — type "help" for commands' }
+            ]);
+            const [input, setInput] = useState('');
+            const inputRef = useRef(null);
+            const bottomRef = useRef(null);
+
+            const allSkills = {
+                "Languages": ["Python", "TypeScript", "C++", "JavaScript", "Shell"],
+                "AI/ML": ["PyTorch", "Llama-3", "BERT", "OpenCV", "LSTM", "ARIMA", "Agentic Pipelines"],
+                "Frontend": ["React.js", "Next.js", "Flutter", "Tailwind CSS", "Riverpod"],
+                "Backend": ["FastAPI", "Node.js", "Supabase", "PostgreSQL", "Firebase", "MongoDB"],
+                "Systems": ["Linux Kernel", "Docker", "Git", "FFmpeg", "Lightning AI", "Claude Code"]
+            };
+
+            const commands = {
+                help: () => "Available: whoami, ls skills/, cat manifesto.txt, git log, uname -a, clear, sudo make coffee",
+                whoami: () => "harshit.tiwari — full-stack dev, kernel hacker, ai engineer. building waterplane.",
+                "ls skills/": () => Object.entries(allSkills).map(([k,v]) => `${k}/\n  ${v.join('  ')}`).join('\n'),
+                "uname -a": () => "Linux harshit-dev 6.12.0-harshit-custom #7 SMP x86_64 GNU/Linux",
+                "git log --oneline -5": () =>
+                    "a3f91c2 fine-tune llama3 on synthetic forensics dataset\n" +
+                    "b82de10 add yolov8 uas tracking pipeline with numpy telemetry\n" +
+                    "c17aa43 deploy vaayu-darshak cnn+lstm+arima ensemble to prod\n" +
+                    "d90ff81 patch SM6225 kernel: fix thermal throttle on sustained load\n" +
+                    "e44bc09 ship automotive crm with 7-tier rbac + supabase rls",
+                "cat manifesto.txt": () => "Ship fast. Go deep. Kernel or cloud — it doesn't matter. Build things that work.",
+                "sudo make coffee": () => "Error: coffee: command not found. Try: sudo apt install coffee",
+                clear: () => null,
+            };
+
+            useEffect(() => {
+                inputRef.current?.focus();
+            }, []);
+
+            useEffect(() => {
+                bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [history]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const cmd = input.trim().toLowerCase();
+                if (!cmd) return;
+
+                if (cmd === 'clear') {
+                    setHistory([{ type: 'system', text: 'cleared.' }]);
+                    setInput('');
+                    return;
+                }
+
+                const output = commands[cmd] ? commands[cmd]() : `command not found: ${cmd}. try 'help'`;
+                setHistory(prev => [
+                    ...prev,
+                    { type: 'input', text: `harshit@portfolio:~$ ${input}` },
+                    { type: 'output', text: output }
+                ]);
+                setInput('');
+            };
+
+            return (
+                <div className="fixed bottom-4 right-4 z-[150] w-[min(500px,calc(100vw-2rem))]"
+                     style={{fontFamily: 'Space Mono, monospace'}}>
+                    <div className="border-[3px] border-[#00FF41] bg-[#0a0a0a] shadow-[6px_6px_0px_0px_#00FF41]">
+                        <div className="flex items-center justify-between bg-[#00FF41] px-3 py-2">
+                            <span className="text-black text-xs font-bold uppercase tracking-wider">harshit@portfolio:~$</span>
+                            <button onClick={onClose} className="text-black hover:text-[#FF00FF] transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="h-[260px] overflow-y-auto p-3 terminal-scroll">
+                            {history.map((item, i) => (
+                                <div key={i} className={`text-xs mb-1 leading-relaxed whitespace-pre-wrap ${item.type === 'input' ? 'text-[#EBFF00]' : item.type === 'system' ? 'text-[#00FF41] opacity-60' : 'text-[#00FF41]'}`}>
+                                    {item.text}
+                                </div>
+                            ))}
+                            <div ref={bottomRef} />
+                        </div>
+                        <form onSubmit={handleSubmit} className="flex border-t border-[#00FF41]">
+                            <span className="text-[#00FF41] text-xs px-2 py-2 opacity-60 flex-shrink-0">$</span>
+                            <input
+                                ref={inputRef}
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                className="flex-1 bg-transparent text-[#00FF41] text-xs py-2 pr-2 focus:outline-none"
+                                autoComplete="off"
+                                spellCheck={false}
+                            />
+                        </form>
+                    </div>
+                </div>
+            );
         };
 
         // ─── EXPLORE MORE MODAL ───────────────────────────────────────────────
@@ -127,9 +312,7 @@
                         const res = await fetch('https://api.github.com/users/iamharshit188/repos?sort=updated&per_page=100');
                         if (!res.ok) throw new Error('GitHub API error');
                         const data = await res.json();
-                        // Only own repos, not forks
                         const own = data.filter(r => !r.fork);
-                        // Sort by stars desc
                         own.sort((a, b) => b.stargazers_count - a.stargazers_count);
                         setRepos(own);
                     } catch(e) {
@@ -139,15 +322,12 @@
                     }
                 };
                 fetchRepos();
-
-                // Close on ESC
                 const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
                 window.addEventListener('keydown', handleKey);
                 return () => window.removeEventListener('keydown', handleKey);
             }, []);
 
             const languages = ['ALL', ...Array.from(new Set(repos.map(r => r.language).filter(Boolean)))];
-
             const filtered = repos.filter(r => {
                 const matchesSearch = r.name.toLowerCase().includes(filter.toLowerCase()) ||
                     (r.description || '').toLowerCase().includes(filter.toLowerCase());
@@ -156,14 +336,10 @@
             });
 
             return (
-                <div 
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
                     style={{ background: 'rgba(0,0,0,0.75)' }}
-                    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-                >
+                    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
                     <div className="animate-modalIn w-full max-w-5xl max-h-[90vh] bg-white dark:bg-[#0a0a0a] border-[3px] border-black dark:border-white shadow-[10px_10px_0px_0px_#FF00FF] flex flex-col">
-                        
-                        {/* Modal Header */}
                         <div className="flex items-center justify-between border-b-[3px] border-black dark:border-white p-4 md:p-6 bg-[#EBFF00] flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 <Layers size={28} className="text-black" />
@@ -172,43 +348,24 @@
                                     <p className="font-mono text-xs text-black mt-0.5">github.com/iamharshit188 — own repos only</p>
                                 </div>
                             </div>
-                            <button 
-                                onClick={onClose}
-                                className="border-[3px] border-black p-1.5 bg-white hover:bg-[#FF00FF] hover:text-white transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                            >
+                            <button onClick={onClose} className="border-[3px] border-black p-1.5 bg-white hover:bg-[#FF00FF] hover:text-white transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
                                 <X size={22} className="text-black" />
                             </button>
                         </div>
-
-                        {/* Filters */}
                         {!loading && !error && (
                             <div className="flex flex-col sm:flex-row gap-3 p-4 border-b-[3px] border-black dark:border-white bg-gray-50 dark:bg-[#111] flex-shrink-0">
-                                <input
-                                    type="text"
-                                    placeholder="SEARCH REPOS..."
-                                    value={filter}
-                                    onChange={e => setFilter(e.target.value)}
-                                    className="font-mono font-bold text-sm border-[2px] border-black dark:border-white px-3 py-2 bg-white dark:bg-[#0a0a0a] dark:text-white focus:outline-none focus:border-[#FF00FF] flex-1 uppercase placeholder:text-gray-400"
-                                />
+                                <input type="text" placeholder="SEARCH REPOS..." value={filter} onChange={e => setFilter(e.target.value)}
+                                    className="font-mono font-bold text-sm border-[2px] border-black dark:border-white px-3 py-2 bg-white dark:bg-[#0a0a0a] dark:text-white focus:outline-none focus:border-[#FF00FF] flex-1 uppercase placeholder:text-gray-400" />
                                 <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
                                     {languages.slice(0, 8).map(lang => (
-                                        <button
-                                            key={lang}
-                                            onClick={() => setLangFilter(lang)}
-                                            className={`font-mono text-xs font-bold border-[2px] px-3 py-1 whitespace-nowrap transition-colors ${
-                                                langFilter === lang 
-                                                    ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white' 
-                                                    : 'border-black dark:border-white hover:bg-[#EBFF00] hover:text-black hover:border-black'
-                                            }`}
-                                        >
+                                        <button key={lang} onClick={() => setLangFilter(lang)}
+                                            className={`font-mono text-xs font-bold border-[2px] px-3 py-1 whitespace-nowrap transition-colors ${langFilter === lang ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white' : 'border-black dark:border-white hover:bg-[#EBFF00] hover:text-black hover:border-black'}`}>
                                             {lang}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                         )}
-
-                        {/* Content */}
                         <div className="flex-1 overflow-y-auto modal-scroll p-4 md:p-6">
                             {loading && (
                                 <div className="flex flex-col items-center justify-center h-48 gap-4">
@@ -216,13 +373,11 @@
                                     <div className="font-mono text-sm dark:text-gray-400">Fetching from GitHub API</div>
                                 </div>
                             )}
-
                             {error && (
                                 <div className="border-[3px] border-black dark:border-white p-6 bg-[#FF00FF] text-white">
                                     <p className="font-display text-xl uppercase">{error}</p>
                                 </div>
                             )}
-
                             {!loading && !error && (
                                 <>
                                     <p className="font-mono text-xs mb-4 text-gray-500 dark:text-gray-400 uppercase">
@@ -230,56 +385,37 @@
                                     </p>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {filtered.map((repo) => (
-                                            <a 
-                                                key={repo.id}
-                                                href={repo.html_url}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                            <a key={repo.id} href={repo.html_url} target="_blank" rel="noreferrer"
                                                 className="repo-card block border-[2px] border-black dark:border-white p-4 bg-white dark:bg-[#111] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_#FF00FF] dark:hover:shadow-[6px_6px_0px_0px_#EBFF00]"
-                                                style={{ textDecoration: 'none' }}
-                                            >
+                                                style={{ textDecoration: 'none' }}>
                                                 <div className="flex items-start justify-between mb-2 gap-2">
-                                                    <h3 className="font-display text-base uppercase leading-tight text-black dark:text-white break-all">
-                                                        {repo.name}
-                                                    </h3>
+                                                    <h3 className="font-display text-base uppercase leading-tight text-black dark:text-white break-all">{repo.name}</h3>
                                                     <ExternalLink size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
                                                 </div>
-
                                                 {repo.description && (
-                                                    <p className="font-mono text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed line-clamp-2">
-                                                        {repo.description}
-                                                    </p>
+                                                    <p className="font-mono text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed line-clamp-2">{repo.description}</p>
                                                 )}
-
                                                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-200 dark:border-gray-700">
                                                     <div className="flex items-center gap-3">
                                                         {repo.language && (
                                                             <span className="flex items-center gap-1 font-mono text-xs font-bold">
-                                                                <span 
-                                                                    className="w-2.5 h-2.5 rounded-full border border-black dark:border-white"
-                                                                    style={{ background: langColors[repo.language] || '#888' }}
-                                                                ></span>
+                                                                <span className="w-2.5 h-2.5 rounded-full border border-black dark:border-white" style={{ background: langColors[repo.language] || '#888' }}></span>
                                                                 {repo.language}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         {repo.stargazers_count > 0 && (
-                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400">
-                                                                <Star size={11} /> {repo.stargazers_count}
-                                                            </span>
+                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400"><Star size={11} /> {repo.stargazers_count}</span>
                                                         )}
                                                         {repo.forks_count > 0 && (
-                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400">
-                                                                <GitFork size={11} /> {repo.forks_count}
-                                                            </span>
+                                                            <span className="flex items-center gap-1 font-mono text-xs text-gray-500 dark:text-gray-400"><GitFork size={11} /> {repo.forks_count}</span>
                                                         )}
                                                     </div>
                                                 </div>
                                             </a>
                                         ))}
                                     </div>
-
                                     {filtered.length === 0 && (
                                         <div className="text-center py-16">
                                             <p className="font-display text-2xl uppercase text-gray-300 dark:text-gray-700">NO REPOS FOUND</p>
@@ -288,15 +424,9 @@
                                 </>
                             )}
                         </div>
-
-                        {/* Footer */}
                         <div className="border-t-[3px] border-black dark:border-white p-3 bg-black dark:bg-white flex-shrink-0">
-                            <a 
-                                href="https://github.com/iamharshit188" 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="font-mono text-xs text-[#EBFF00] dark:text-black font-bold uppercase hover:underline flex items-center gap-2"
-                            >
+                            <a href="https://github.com/iamharshit188" target="_blank" rel="noreferrer"
+                                className="font-mono text-xs text-[#EBFF00] dark:text-black font-bold uppercase hover:underline flex items-center gap-2">
                                 <Github size={14} /> View Full Profile on GitHub
                             </a>
                         </div>
@@ -310,17 +440,121 @@
             const [isMenuOpen, setIsMenuOpen] = useState(false);
             const [isDark, setIsDark] = useState(false);
             const [showExplore, setShowExplore] = useState(false);
+            const [konamiMode, setKonamiMode] = useState(false);
+            const [showTerminal, setShowTerminal] = useState(false);
+            const [logoClicks, setLogoClicks] = useState(0);
+            const [showLogoToast, setShowLogoToast] = useState(false);
+            const [logoGlitch, setLogoGlitch] = useState(false);
+            const [typewriterIdx, setTypewriterIdx] = useState(0);
 
+            const typewriterTexts = [
+                "Building WaterPlane AI →",
+                "Fine-tuning Llama-3 →",
+                "Patching Linux Kernel →",
+                "Shipping on T4 GPU →",
+                "Training on ISRO Data →"
+            ];
+
+            const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            const konamiRef = useRef([]);
+
+            // Console easter egg
+            useEffect(() => {
+                console.log('%c\n██╗  ██╗████████╗   ██████╗ ███████╗██╗   ██╗\n██║  ██║╚══██╔══╝   ██╔══██╗██╔════╝██║   ██║\n███████║   ██║      ██║  ██║█████╗  ██║   ██║\n██╔══██║   ██║      ██║  ██║██╔══╝  ╚██╗ ██╔╝\n██║  ██║   ██║      ██████╔╝███████╗ ╚████╔╝ \n╚═╝  ╚═╝   ╚═╝      ╚═════╝ ╚══════╝  ╚═══╝  \n', 'color: #EBFF00; background: #000; font-size: 10px; font-family: monospace;');
+                console.log('%c👋 Hey fellow dev — nice to see you in here.', 'color: #FF00FF; font-size: 14px; font-weight: bold;');
+                console.log('%cBuilt with React (in-browser Babel) + Tailwind. No build step. Just vibes.', 'color: #00FFFF; font-size: 12px;');
+                console.log('%cTry the Konami code ↑↑↓↓←→←→BA for a surprise.', 'color: #EBFF00; font-size: 12px;');
+                console.log('%c~ harshit | github.com/iamharshit188', 'color: #888; font-size: 11px;');
+            }, []);
+
+            // Cursor trail canvas
+            useEffect(() => {
+                const canvas = document.createElement('canvas');
+                canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+                document.body.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                let particles = [];
+                let rafId;
+
+                const resize = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                resize();
+                window.addEventListener('resize', resize);
+
+                const onMove = (e) => {
+                    if (particles.length >= 20) particles.shift();
+                    particles.push({ x: e.clientX, y: e.clientY, life: 1.0, color: Math.random() > 0.5 ? '#EBFF00' : '#FF00FF' });
+                };
+                window.addEventListener('mousemove', onMove);
+
+                const draw = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles = particles.filter(p => p.life > 0);
+                    particles.forEach(p => {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.life * 5, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color + Math.floor(p.life * 255).toString(16).padStart(2, '0');
+                        ctx.fill();
+                        p.life -= 0.06;
+                    });
+                    rafId = requestAnimationFrame(draw);
+                };
+                draw();
+
+                return () => {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('resize', resize);
+                    cancelAnimationFrame(rafId);
+                    if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                };
+            }, []);
+
+            // Konami code
+            useEffect(() => {
+                const handler = (e) => {
+                    konamiRef.current.push(e.key);
+                    if (konamiRef.current.length > konamiSeq.length) konamiRef.current.shift();
+                    if (konamiRef.current.join(',') === konamiSeq.join(',')) {
+                        setKonamiMode(true);
+                        konamiRef.current = [];
+                    }
+                    if (e.key === '`') setShowTerminal(prev => !prev);
+                };
+                window.addEventListener('keydown', handler);
+                return () => window.removeEventListener('keydown', handler);
+            }, []);
+
+            // Typewriter
+            useEffect(() => {
+                const t = setInterval(() => setTypewriterIdx(i => (i + 1) % typewriterTexts.length), 2500);
+                return () => clearInterval(t);
+            }, []);
+
+            // Dark mode
             useEffect(() => {
                 if (isDark) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
             }, [isDark]);
 
-            // Prevent body scroll when modal open
+            // Body scroll lock
             useEffect(() => {
-                document.body.style.overflow = showExplore ? 'hidden' : '';
+                document.body.style.overflow = (showExplore || konamiMode) ? 'hidden' : '';
                 return () => { document.body.style.overflow = ''; };
-            }, [showExplore]);
+            }, [showExplore, konamiMode]);
+
+            const handleLogoClick = () => {
+                const next = logoClicks + 1;
+                setLogoClicks(next);
+                if (next >= 7) {
+                    setLogoGlitch(true);
+                    setShowLogoToast(true);
+                    setLogoClicks(0);
+                    setTimeout(() => setLogoGlitch(false), 500);
+                    setTimeout(() => setShowLogoToast(false), 3000);
+                }
+            };
 
             const scrollToSection = (id) => {
                 document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -328,89 +562,114 @@
             };
 
             const skills = {
-                languages: ["C++", "Python", "JavaScript", "Dart", "Solidity", "Shell"],
-                frameworks: ["React.js", "Flutter", "Node.js", "PyTorch", "Manim", "Tailwind"],
-                tools: ["Linux Kernel", "Docker", "Git", "Firebase", "MongoDB", "Figma"]
+                "Languages": ["Python", "TypeScript", "C++", "JavaScript", "Shell"],
+                "AI / ML": ["PyTorch", "Llama-3", "BERT", "OpenCV", "LSTM", "ARIMA", "LLM Fine-Tuning", "Agentic Pipelines"],
+                "Frontend": ["React.js", "Next.js", "Flutter", "Tailwind CSS", "Riverpod", "Zod"],
+                "Backend": ["FastAPI", "Node.js", "Supabase", "PostgreSQL", "Firebase", "MongoDB", "SQLAlchemy"],
+                "Systems": ["Linux Kernel", "Docker", "Git", "FFmpeg", "Lightning AI", "Claude Code"]
             };
+
+            const stats = [
+                { value: "6+", label: "Production Shipped" },
+                { value: "2×", label: "IIT Winner" },
+                { value: "T4 GPU", label: "Models Deployed" },
+                { value: "SM6225", label: "Kernel Patched" },
+            ];
 
             const experience = [
                 {
                     company: "WaterPlane",
-                    role: "Co-Founder",
+                    role: "Co-Founder & CTO",
                     date: "Jul 2025 – Present",
                     type: "Full-time",
-                    skills: ["Start-up Leadership", "Start-up Ventures"],
-                    description: "Co-founding a deep-tech startup focused on building AI-driven environmental monitoring solutions. Leading product vision, engineering roadmap, and team growth."
+                    skills: ["AI/ML", "Product Engineering", "Start-up"],
+                    description: "Co-founding a deep-tech startup building AI-driven environmental monitoring solutions. Leading product vision, engineering roadmap, and team — translating satellite data pipelines into consumer-grade insights."
                 },
                 {
-                    company: "Lucknow Super Giants",
-                    role: "Management Team Member",
-                    date: "Mar 2025 – Jun 2025",
-                    type: "Part-time · On-site",
-                    skills: ["Infrastructure Management"],
-                    description: "Volunteered with Swapna Foundation to lead deployment and management of infrastructure solutions, enhancing the overall fan experience through innovative development and engagement strategies."
+                    company: "Confidential — Automotive CRM",
+                    role: "Freelance Full-Stack Developer",
+                    date: "Feb 2026 – Apr 2026",
+                    type: "Freelance · Remote",
+                    skills: ["Next.js", "TypeScript", "Supabase", "7-tier RBAC"],
+                    description: "Built a production CRM from scratch with a 7-tier RBAC system and Supabase RLS — unauthorized data access reduced to zero. Engineered a 13-step sales pipeline with dynamic quotation builder, automated GST calculation, and Cloudinary-integrated PDF generation via Supabase Edge Functions."
                 },
                 {
-                    company: "Dainik Jagran",
-                    role: "Email Campaign Manager",
-                    date: "Nov 2024 – Dec 2024",
-                    type: "Freelance · Hybrid",
-                    skills: ["SEO", "Email Distribution"],
-                    description: "Managed SMTP setup for brand invitation and collaboration. Successfully executed campaigns for 40+ brands and 20+ Professors and Directorates of IITs."
+                    company: "Legal Arena",
+                    role: "Freelance Full-Stack Developer",
+                    date: "Dec 2025 – Feb 2026",
+                    type: "Freelance · Remote",
+                    skills: ["React.js", "Firebase Auth", "Firestore", "RBAC"],
+                    description: "Delivered a secure SPA unifying reader/writer/admin roles under RBAC with Firebase Auth and real-time blog management and content moderation via Firestore."
+                },
+                {
+                    company: "Tannex & Curio",
+                    role: "Freelance Full-Stack Developer",
+                    date: "Sep 2023 – Jan 2024",
+                    type: "Freelance · Remote",
+                    skills: ["Node.js", "MongoDB", "Razorpay", "Scalability"],
+                    description: "Architected an end-to-end e-commerce platform with Razorpay payment integration, real-time shipping rate APIs, and admin inventory dashboard with SKU tracking. Engineered horizontal scalability via load balancing, query optimization, and DB indexing."
                 },
                 {
                     company: "Felicita Films",
                     role: "Senior Web Developer",
                     date: "Mar 2023 – Dec 2023",
                     type: "Internship · Remote",
-                    skills: ["Python", "E-Commerce"],
-                    description: "Managed and overlooked the development team, led deployment and scaling of production systems. Enhanced app performance by 25% through component optimization and lazy loading."
+                    skills: ["Python", "E-Commerce", "Performance"],
+                    description: "Led deployment and scaling of production systems. Improved app performance by 25% through component optimization and lazy loading."
                 },
                 {
                     company: "aosp-devs",
-                    role: "Android Engineer",
+                    role: "Android / Linux Kernel Engineer",
                     date: "Apr 2018 – Jan 2023",
-                    type: "Freelance · Lucknow",
-                    skills: ["Android Framework", "Linux Kernel"],
-                    description: "Android ROM builder. Contributed to OSS Kernel Development team for OnePlus 9RT, Redmi Note 7, and Redmi Note 11. Deep expertise in Linux kernel and Android framework internals."
+                    type: "Open Source · Lucknow",
+                    skills: ["Linux Kernel", "Android Framework", "AOSP"],
+                    description: "Top SM6225 (Snapdragon 695) kernel contributor. Built custom Android ROMs for OnePlus 9RT, Redmi Note 7, and Redmi Note 11. Deep expertise in Linux kernel internals and Android framework."
                 }
             ];
 
             const projects = [
                 {
-                    title: "Vaayu Darshak",
-                    tags: ["Flutter", "Dart", "LSTM+ARIMA", "Node.js", "ISRO"],
-                    description: "Hyperlocal air quality app visualizing real-time data using ISRO EOS-6 satellite imagery. Hybrid LSTM+ARIMA+CNN model forecasting pollution 72h ahead. Built for ISRO's BAH2025 Hackathon.",
+                    title: "PRAMAAN",
+                    subtitle: "LLM Financial Forensics Engine",
+                    tags: ["FastAPI", "React 19", "Llama-3", "Lightning AI", "SQLAlchemy"],
+                    description: "AI forensic accounting platform cross-referencing management narratives against statutory filings to detect ghost receivables and EBITDA inflation. Fine-tuned Llama-3 on a domain-specific synthetic dataset; deployed via Ollama on Lightning AI (T4 GPU) with FastAPI + SQLAlchemy backend.",
                     color: "bg-[#EBFF00]",
-                    image: "https://picsum.photos/seed/vaayu/800/450",
-                    github: "https://github.com/iamharshit188/isro_hackathon-bah2025",
-                    badge: "ISRO HACKATHON"
-                },
-                {
-                    title: "PsiFur AI",
-                    tags: ["Python", "Manim", "LLMs", "Agentic AI"],
-                    description: "Agentic AI pipeline converting natural language queries into simulated physics videos. Automates code generation for the Manim engine. Winner at IIT Patna Celesta Hackathon.",
-                    color: "bg-[#FF00FF]",
-                    image: "https://picsum.photos/seed/psifur/800/450",
-                    github: "https://github.com/iamharshit188/Celesta_Hackathon",
-                    badge: "IIT PATNA WINNER"
-                },
-                {
-                    title: "Siya Model",
-                    tags: ["PyTorch", "BERT", "LSTM", "NLP"],
-                    description: "Claim detection model identifying factual claims in social media with 85% accuracy. Trained on 50,000+ posts using transfer learning. Finalist at IIT Kanpur NFRA Hackathon.",
-                    color: "bg-[#00FFFF]",
-                    image: "https://picsum.photos/seed/siya/800/450",
+                    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=450&fit=crop&auto=format",
                     github: "https://github.com/Water-Plane/WaterPlane_PRAMAAN",
-                    badge: "IIT KANPUR FINALIST"
+                    badge: "IIT KANPUR FINALIST",
+                    stat: "T4 GPU · Llama-3 Fine-tuned"
+                },
+                {
+                    title: "Vaayu Darshak",
+                    subtitle: "Hyperlocal Air Quality Forecaster",
+                    tags: ["Flutter", "Python", "CNN+LSTM+ARIMA", "ISRO EOS-6", "Supabase"],
+                    description: "Hybrid CNN-LSTM-ARIMA ensemble on ISRO EOS-6 satellite imagery with Dung Beetle Optimizer for dynamic model fusion — outperformed regional benchmarks by 15–20%. Cross-platform Flutter client with Riverpod, offline SQLite, and RESTful ML inferences in under 3 seconds.",
+                    color: "bg-[#FF00FF]",
+                    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=450&fit=crop&auto=format",
+                    github: "https://github.com/iamharshit188/isro_hackathon-bah2025",
+                    badge: "ISRO BAH2025",
+                    stat: "+15–20% vs Regional Benchmark"
+                },
+                {
+                    title: "AeroGuard",
+                    subtitle: "Autonomous UAS Tracking Pipeline",
+                    tags: ["Python", "YOLOv8", "OpenCV", "NumPy", "Edge AI"],
+                    description: "Real-time YOLOv8 + OpenCV pipeline detecting and tracking unmanned aerial systems in dynamic video feeds. Custom NumPy telemetry parser for spatial trajectory extraction, optimized for low-latency edge deployment.",
+                    color: "bg-[#00FFFF]",
+                    image: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&h=450&fit=crop&auto=format",
+                    github: "https://github.com/iamharshit188",
+                    badge: "EDGE AI · 2026",
+                    stat: "<50ms Inference Latency"
                 }
             ];
 
             const achievements = [
-                { title: "Winner - Celesta Hackathon", org: "IIT Patna", desc: "1st Place among 50+ teams. Built innovative AI-driven tech solution." },
-                { title: "Winner - Samsung Hackathon", org: "BBD University", desc: "Created AI-driven web app for agricultural advancement." },
-                { title: "Finalist - NFRA Finance Hackathon", org: "IIT Kanpur", desc: "GenAI solution for simplifying financial statements." },
-                { title: "Finalist - Vault Heist", org: "CGC Mohali", desc: "Top finalist among 300+ teams in cybersecurity hackathon." }
+                { title: "1st Place — Celesta Hackathon", org: "IIT Patna", desc: "Built PsiFur AI: agentic NL-to-physics-simulation pipeline. Winner among 50+ teams." },
+                { title: "Winner — Samsung Innovation Hackathon", org: "BBD University", desc: "AI-driven agricultural advancement web application." },
+                { title: "Finalist — NFRA Finance Hackathon", org: "IIT Kanpur", desc: "PRAMAAN: LLM-based forensic accounting engine for statutory anomaly detection." },
+                { title: "Qualifier — Google The Big Code", org: "Google India", desc: "Qualified for India's prestigious competitive programming challenge, Mar. 2026." },
+                { title: "2nd / 100+ — TIET National Contest", org: "Thapar Institute", desc: "Top 2% finish in national competitive programming competition." },
+                { title: "Top Kernel Contributor — SM6225", org: "Open Source", desc: "AOSP/Xiaomi spes kernel contributor. Built Android ROMs for 3 device families since age 14." }
             ];
 
             const NeoButton = ({ children, onClick, className = "", variant = "primary", as: Tag = "button", href, target, rel }) => {
@@ -429,15 +688,26 @@
             return (
                 <div className="min-h-screen font-sans overflow-x-hidden transition-colors duration-300">
 
-                    {/* Explore More Modal */}
+                    {/* Easter Egg Overlays */}
+                    {konamiMode && <KernelModeOverlay onClose={() => setKonamiMode(false)} />}
+                    {showTerminal && <SecretTerminal onClose={() => setShowTerminal(false)} />}
                     {showExplore && <ExploreModal onClose={() => setShowExplore(false)} isDark={isDark} />}
+
+                    {/* Logo Toast */}
+                    {showLogoToast && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] bg-[#FF00FF] text-white font-mono font-bold text-sm px-5 py-3 border-[3px] border-black shadow-[4px_4px_0px_0px_#000] animate-fadeIn">
+                            🎮 You found it. Now try the Konami code.
+                        </div>
+                    )}
 
                     {/* Navbar */}
                     <nav className="fixed top-0 w-full z-50 bg-white dark:bg-[#0a0a0a] border-b-[3px] border-black dark:border-white px-4 py-3 md:px-8 transition-colors duration-300">
                         <div className="max-w-7xl mx-auto flex justify-between items-center">
-                            <div className="text-xl md:text-2xl font-display uppercase tracking-tighter">
+                            <button
+                                onClick={handleLogoClick}
+                                className={`text-xl md:text-2xl font-display uppercase tracking-tighter cursor-pointer bg-transparent border-none p-0 ${logoGlitch ? 'animate-glitch' : ''}`}>
                                 HT<span className="text-[#FF00FF]">.</span>DEV
-                            </div>
+                            </button>
                             <div className="flex items-center gap-6">
                                 <div className="hidden md:flex gap-6 font-mono font-bold text-sm">
                                     {['Home', 'Projects', 'Experience', 'Contact'].map((item) => (
@@ -485,9 +755,18 @@
                                 Harshit<br/>
                                 <span style={{WebkitTextStroke: isDark ? '2px white' : '2px black', color: 'transparent'}}>Tiwari</span>
                             </h1>
+
+                            {/* Typewriter status */}
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse flex-shrink-0"></span>
+                                <span className="font-mono text-sm font-bold text-[#00FF41] animate-fadeIn" key={typewriterIdx}>
+                                    {typewriterTexts[typewriterIdx]}
+                                </span>
+                            </div>
+
                             <p className="font-mono text-lg md:text-xl max-w-2xl mb-8 leading-relaxed border-l-[6px] border-[#EBFF00] pl-6 py-2 bg-gray-50 dark:bg-[#222]">
-                                Full Stack Developer, AI Engineer, and Open Source Contributor based in Lucknow. 
-                                Obsessed with <span className="font-bold bg-[#FF00FF] text-white px-1">Linux Kernels</span>, <span className="font-bold bg-black dark:bg-white text-white dark:text-black px-1">Agentic AI</span>, and building systems that scale.
+                                Full-Stack Developer, AI Engineer, and Open Source Contributor.
+                                Building at the intersection of <span className="font-bold bg-[#FF00FF] text-white px-1">LLMs</span>, <span className="font-bold bg-black dark:bg-white text-white dark:text-black px-1">satellite data</span>, and <span className="font-bold bg-[#EBFF00] text-black px-1">Linux kernels</span>.
                             </p>
                             <div className="flex flex-wrap gap-4">
                                 <NeoButton onClick={() => scrollToSection('projects')} variant="dark">View Work</NeoButton>
@@ -498,16 +777,36 @@
                                     <Linkedin size={20} /> LinkedIn
                                 </NeoButton>
                             </div>
+                            {/* Claude Code badge */}
+                            <div className="absolute bottom-3 right-4">
+                                <span className="font-mono text-[10px] bg-black dark:bg-[#222] text-[#EBFF00] px-2 py-1 border border-[#EBFF00] opacity-70 uppercase tracking-widest">
+                                    BUILT WITH CLAUDE CODE
+                                </span>
+                            </div>
                         </div>
 
                         {/* Marquee */}
                         <div className="mt-20 overflow-hidden border-y-[3px] border-black dark:border-white bg-[#EBFF00] py-3 rotate-1 mx-[-50vw] w-[200vw]">
                             <div className="whitespace-nowrap animate-marquee font-display text-2xl md:text-4xl uppercase tracking-widest text-black flex gap-12">
                                 <span>Open Source</span><span>•</span><span>Full Stack</span><span>•</span>
-                                <span>Artificial Intelligence</span><span>•</span><span>Systems Engineering</span><span>•</span>
+                                <span>LLM Engineering</span><span>•</span><span>Linux Kernel</span><span>•</span>
+                                <span>Edge AI</span><span>•</span><span>Agentic Pipelines</span><span>•</span>
                                 <span>Open Source</span><span>•</span><span>Full Stack</span><span>•</span>
-                                <span>Artificial Intelligence</span><span>•</span><span>Systems Engineering</span>
+                                <span>LLM Engineering</span><span>•</span><span>Linux Kernel</span><span>•</span>
+                                <span>Edge AI</span><span>•</span><span>Agentic Pipelines</span>
                             </div>
+                        </div>
+                    </section>
+
+                    {/* Stats Strip */}
+                    <section className="py-8 px-4 md:px-8 max-w-7xl mx-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {stats.map((s, i) => (
+                                <div key={i} className="border-[3px] border-black dark:border-white p-4 bg-white dark:bg-[#111] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] text-center hover:-translate-y-1 transition-transform">
+                                    <div className="font-display text-3xl md:text-4xl text-[#FF00FF] leading-none mb-1">{s.value}</div>
+                                    <div className="font-mono text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">{s.label}</div>
+                                </div>
+                            ))}
                         </div>
                     </section>
 
@@ -516,7 +815,7 @@
                         <h2 className="text-4xl md:text-6xl font-display mb-12 uppercase flex items-center gap-4">
                             <Terminal size={48} className="text-[#FF00FF]" /> Technical Expertise
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {Object.entries(skills).map(([category, items]) => (
                                 <div key={category} className="border-[3px] border-black dark:border-white p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-[#111] hover:-translate-y-1 transition-all">
                                     <h3 className="font-display text-2xl uppercase mb-6 bg-black dark:bg-white text-white dark:text-black inline-block px-2 py-1 transform -rotate-1">{category}</h3>
@@ -547,40 +846,35 @@
                                     <div className={`absolute inset-0 ${project.color} border-[3px] border-black dark:border-white transform translate-x-3 translate-y-3 md:translate-x-5 md:translate-y-5 transition-transform group-hover:translate-x-2 group-hover:translate-y-2`}></div>
                                     <div className="relative bg-white dark:bg-[#111] border-[3px] border-black dark:border-white p-6 md:p-10 flex flex-col md:flex-row gap-8 items-start">
                                         <div className="flex-1">
-                                            {/* Badge */}
-                                            <div className="inline-block mb-3">
+                                            <div className="flex flex-wrap items-center gap-3 mb-3">
                                                 <span className="font-mono text-xs font-bold bg-black dark:bg-white text-white dark:text-black px-2 py-1 uppercase tracking-wider">
                                                     {project.badge}
                                                 </span>
+                                                <span className="font-mono text-xs font-bold bg-black text-[#EBFF00] px-2 py-1 uppercase tracking-wider border border-[#EBFF00]">
+                                                    {project.stat}
+                                                </span>
                                             </div>
-                                            <div className="flex flex-wrap gap-2 mb-4">
+                                            <div className="flex flex-wrap gap-2 mb-3">
                                                 {project.tags.map(tag => (
                                                     <span key={tag} className="font-mono text-xs font-bold border border-black dark:border-white px-2 py-0.5 uppercase bg-white dark:bg-black text-black dark:text-white">
                                                         {tag}
                                                     </span>
                                                 ))}
                                             </div>
-                                            <h3 className="text-3xl md:text-5xl font-display uppercase mb-4 leading-tight group-hover:text-[#FF00FF] transition-colors">
+                                            <h3 className="text-3xl md:text-5xl font-display uppercase mb-1 leading-tight group-hover:text-[#FF00FF] transition-colors">
                                                 {project.title}
                                             </h3>
+                                            <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider">{project.subtitle}</p>
                                             <p className="font-mono text-base md:text-lg mb-6 leading-relaxed border-l-4 border-black dark:border-white pl-4 text-gray-800 dark:text-gray-300">
                                                 {project.description}
                                             </p>
                                             <div className="flex gap-4 flex-wrap">
-                                                <a 
-                                                    href={project.github} 
-                                                    target="_blank" 
-                                                    rel="noreferrer"
-                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 bg-black dark:bg-white text-white dark:text-black hover:bg-[#FF00FF] hover:border-[#FF00FF] dark:hover:bg-[#FF00FF] dark:hover:text-white dark:hover:border-[#FF00FF] transition-colors shadow-[3px_3px_0px_0px_#EBFF00] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                                                >
+                                                <a href={project.github} target="_blank" rel="noreferrer"
+                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 bg-black dark:bg-white text-white dark:text-black hover:bg-[#FF00FF] hover:border-[#FF00FF] dark:hover:bg-[#FF00FF] dark:hover:text-white dark:hover:border-[#FF00FF] transition-colors shadow-[3px_3px_0px_0px_#EBFF00] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
                                                     <Github size={16} /> View Case Study
                                                 </a>
-                                                <a
-                                                    href={project.github}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 hover:bg-[#EBFF00] hover:text-black hover:border-black transition-colors"
-                                                >
+                                                <a href={project.github} target="_blank" rel="noreferrer"
+                                                    className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[2px] border-black dark:border-white px-4 py-2 hover:bg-[#EBFF00] hover:text-black hover:border-black transition-colors">
                                                     <ExternalLink size={15} /> Source Code
                                                 </a>
                                             </div>
@@ -593,15 +887,13 @@
                             ))}
                         </div>
 
-                        {/* ── EXPLORE MORE ─────────────────────────────────────── */}
+                        {/* Explore More */}
                         <div className="mt-20 border-[3px] border-black dark:border-white p-8 md:p-12 bg-black dark:bg-white shadow-[8px_8px_0px_0px_#EBFF00] text-center relative overflow-hidden">
-                            {/* Decorative grid bg */}
                             <div className="absolute inset-0 opacity-10"
                                 style={{
                                     backgroundImage: 'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
                                     backgroundSize: '32px 32px'
-                                }}
-                            ></div>
+                                }}></div>
                             <div className="relative z-10">
                                 <div className="inline-block bg-[#FF00FF] border-[3px] border-white dark:border-black px-4 py-1 font-mono font-bold text-sm text-white dark:text-black uppercase mb-6 transform rotate-1">
                                     79 REPOS & COUNTING
@@ -616,17 +908,12 @@
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                                     <button
                                         onClick={() => setShowExplore(true)}
-                                        className="flex items-center gap-3 font-display text-xl uppercase border-[3px] border-white dark:border-black px-8 py-4 bg-[#EBFF00] text-black shadow-[6px_6px_0px_0px_#FF00FF] hover:shadow-[8px_8px_0px_0px_#FF00FF] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all"
-                                    >
+                                        className="flex items-center gap-3 font-display text-xl uppercase border-[3px] border-white dark:border-black px-8 py-4 bg-[#EBFF00] text-black shadow-[6px_6px_0px_0px_#FF00FF] hover:shadow-[8px_8px_0px_0px_#FF00FF] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all">
                                         <Layers size={24} />
                                         Explore All Projects
                                     </button>
-                                    <a
-                                        href="https://github.com/iamharshit188"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[3px] border-white dark:border-black px-6 py-4 text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors"
-                                    >
+                                    <a href="https://github.com/iamharshit188" target="_blank" rel="noreferrer"
+                                        className="flex items-center gap-2 font-mono font-bold text-sm uppercase border-[3px] border-white dark:border-black px-6 py-4 text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors">
                                         <Github size={18} /> Open GitHub Profile
                                     </a>
                                 </div>
@@ -642,17 +929,12 @@
                                 <div className="space-y-0 border-l-[3px] border-black dark:border-white ml-2">
                                     {experience.map((job, idx) => (
                                         <div key={idx} className="relative pl-8 pb-10 last:pb-0">
-                                            {/* Timeline dot */}
                                             <div className="absolute -left-[11px] top-1 w-5 h-5 bg-[#FF00FF] border-[3px] border-black dark:border-white flex-shrink-0"></div>
-                                            
-                                            {/* Card */}
                                             <div className="border-[3px] border-black dark:border-white bg-white dark:bg-[#111] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-0.5 transition-all">
-                                                {/* Card header stripe */}
                                                 <div className="bg-black dark:bg-white px-4 py-2 flex flex-wrap items-center justify-between gap-2">
                                                     <h4 className="font-display text-base md:text-lg uppercase text-white dark:text-black leading-none">{job.role}</h4>
                                                     <span className="font-mono text-xs font-bold text-[#EBFF00] dark:text-[#FF00FF] uppercase">{job.type}</span>
                                                 </div>
-                                                {/* Card body */}
                                                 <div className="p-4">
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
                                                         <span className="font-mono font-bold text-sm text-[#FF00FF]">@ {job.company}</span>
@@ -675,13 +957,13 @@
                                 </div>
                             </div>
                             <div className="lg:col-span-2">
-                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">Hackathons</h2>
+                                <h2 className="text-3xl md:text-4xl font-display uppercase mb-8 border-b-[3px] border-black dark:border-white pb-4 inline-block">Hackathons & Awards</h2>
                                 <div className="space-y-4">
                                     {achievements.map((award, idx) => (
                                         <div key={idx} className="border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_#EBFF00] dark:shadow-[4px_4px_0px_0px_#EBFF00] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all bg-white dark:bg-[#111]">
                                             <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-display text-lg uppercase leading-tight w-3/4">{award.title}</h4>
-                                                <Award size={24} />
+                                                <h4 className="font-display text-base uppercase leading-tight w-3/4">{award.title}</h4>
+                                                <Award size={22} />
                                             </div>
                                             <div className="font-mono text-xs font-bold mb-2 uppercase bg-black dark:bg-white text-white dark:text-black inline-block px-1">{award.org}</div>
                                             <p className="font-mono text-sm text-gray-800 dark:text-gray-300">{award.desc}</p>
@@ -727,6 +1009,11 @@
                                     <Github size={13} /> iamharshit188
                                 </a>
                             </div>
+                        </div>
+                        <div className="max-w-7xl mx-auto mt-3">
+                            <p className="font-mono text-[10px] text-gray-600 dark:text-gray-500 uppercase tracking-widest">
+                                [ press ` for terminal &nbsp;|&nbsp; ↑↑↓↓←→←→BA for kernel mode ]
+                            </p>
                         </div>
                     </footer>
                 </div>

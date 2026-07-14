@@ -54,6 +54,12 @@
         --border:   rgba(255,255,255,0.1);
         --border2:  rgba(255,255,255,0.2);
         --grid-line: rgba(255,255,255,0.05);
+        --accent-yellow-text:   #EBFF00;
+        --accent-pink-text:     #FF00FF;
+        --accent-cyan-text:     #00FFFF;
+        --accent-yellow-border: rgba(235,255,0,0.4);
+        --accent-pink-border:   rgba(255,0,255,0.4);
+        --accent-cyan-border:   rgba(0,255,255,0.4);
       }
       [data-theme="light"] {
         --bg:       #F5F5F0;
@@ -80,6 +86,12 @@
         --border:   rgba(0,0,0,0.1);
         --border2:  rgba(0,0,0,0.18);
         --grid-line: rgba(0,0,0,0.06);
+        --accent-yellow-text:   #7A5D00;
+        --accent-pink-text:     #A3005C;
+        --accent-cyan-text:     #0E6E80;
+        --accent-yellow-border: rgba(122,93,0,0.45);
+        --accent-pink-border:   rgba(163,0,92,0.45);
+        --accent-cyan-border:   rgba(14,110,128,0.45);
       }
 
       body {
@@ -270,7 +282,7 @@
                 icon: Layout,
                 title: "Full-Stack Product & CRM Engineering",
                 pitch: "From a blank repo to a production system your team actually runs the business on.",
-                accent: "#EBFF00",
+                color: "yellow",
                 stack: ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Tailwind CSS"],
                 description: "I design and build complete web applications — dashboards, internal tools, and CRMs — covering schema design, API layer, and a UI that doesn't need a manual. I favor boring, provable architecture over clever abstractions: fewer moving parts, easier to hand off.",
                 proof: {
@@ -282,7 +294,7 @@
                 icon: Shield,
                 title: "Secure Access Control (RBAC / RLS / Auth)",
                 pitch: "Role-based permissions that hold up under an actual audit, not just a demo.",
-                accent: "#FF00FF",
+                color: "pink",
                 stack: ["Supabase RLS", "Firebase Auth", "Firestore", "RBAC Design", "Postgres Policies"],
                 description: "Multi-tenant apps break on permissions, not features. I design row-level security policies and role hierarchies up front — reader/writer/admin, tiered sales roles, whatever the org chart actually needs — so 'who can see what' is enforced at the database, not patched in the UI.",
                 proof: {
@@ -294,7 +306,7 @@
                 icon: Brain,
                 title: "AI / LLM Engineering & Agentic Pipelines",
                 pitch: "Fine-tuned models deployed behind a real API, not a notebook that only runs on my machine.",
-                accent: "#00FFFF",
+                color: "cyan",
                 stack: ["PyTorch", "Llama-3", "Ollama", "FastAPI", "Lightning AI", "SQLAlchemy"],
                 description: "I fine-tune open-weight LLMs on domain-specific data and wrap them in production infrastructure — FastAPI backends, GPU-backed inference, structured outputs you can build a UI around. Useful anywhere 'read this document and flag what's wrong' is the actual job.",
                 proof: {
@@ -307,7 +319,7 @@
                 icon: Eye,
                 title: "Computer Vision & Edge AI",
                 pitch: "Real-time detection and tracking that stays fast enough to run at the edge.",
-                accent: "#EBFF00",
+                color: "yellow",
                 stack: ["YOLOv8", "OpenCV", "NumPy", "Python", "Edge Deployment"],
                 description: "Real-time object detection, tracking, and gesture pipelines tuned for low-latency inference — the kind of workload where 'accurate but slow' isn't a usable answer. I build the full pipeline: capture, inference, telemetry parsing, output.",
                 proof: {
@@ -319,7 +331,7 @@
                 icon: TrendingUp,
                 title: "Applied ML & Time-Series Forecasting",
                 pitch: "Forecasting models that beat the regional benchmark, not just the training set.",
-                accent: "#FF00FF",
+                color: "pink",
                 stack: ["CNN + LSTM", "ARIMA", "Satellite Imagery", "Ensemble Optimization"],
                 description: "Hybrid forecasting systems that fuse deep learning with classical time-series methods — useful when you need both pattern recognition from imagery/sensor data and the stability of statistical models, dynamically weighted rather than hand-tuned.",
                 proof: {
@@ -332,7 +344,7 @@
                 icon: Smartphone,
                 title: "Cross-Platform Mobile Apps",
                 pitch: "One Flutter codebase, shipped to iOS and Android, working offline when the network doesn't.",
-                accent: "#00FFFF",
+                color: "cyan",
                 stack: ["Flutter", "Riverpod", "Supabase", "Offline SQLite"],
                 description: "Mobile clients built for the case where connectivity isn't guaranteed — offline-first data layers, RESTful sync when a connection is available, state management that doesn't fall over on rotation or backgrounding.",
                 proof: {
@@ -345,7 +357,7 @@
                 icon: ShoppingCart,
                 title: "E-Commerce & Payments Integration",
                 pitch: "Checkout, inventory, and shipping that stay correct under real concurrent traffic.",
-                accent: "#EBFF00",
+                color: "yellow",
                 stack: ["Razorpay", "Node.js", "MongoDB", "Load Balancing", "DB Indexing"],
                 description: "End-to-end commerce platforms — payment gateway integration, live shipping-rate APIs, order fulfillment, and admin inventory dashboards with SKU tracking and low-stock alerts. Backends engineered for horizontal scalability, not just a happy-path demo.",
                 proof: {
@@ -357,7 +369,7 @@
                 icon: Cpu,
                 title: "Linux Kernel & Android ROM Engineering",
                 pitch: "Kernel patches and custom ROMs — the kind of systems work most 'full-stack' devs won't touch.",
-                accent: "#FF00FF",
+                color: "pink",
                 stack: ["Linux Kernel", "AOSP", "Device Trees", "Kernel Patching"],
                 description: "Deep systems work: patching kernel trees for specific silicon, building and maintaining custom Android ROMs across device families, and debugging at the level most stacks never expose. Rare on a freelance market that's mostly web work.",
                 proof: {
@@ -370,7 +382,7 @@
                 icon: Code,
                 title: "Landing Pages & Institutional Sites",
                 pitch: "A fast, clean site for the launch, the event, or the client who just needs a real web presence.",
-                accent: "#00FFFF",
+                color: "cyan",
                 stack: ["React", "Tailwind CSS", "Static Hosting", "SEO Basics"],
                 description: "Not every engagement needs a backend. For launches, portfolios, events, and small businesses, I ship a polished single-purpose site fast — same design discipline as the bigger builds, scoped to a one-to-two week turnaround.",
                 proof: {
@@ -410,13 +422,19 @@
             { name: "aainaXbbdu", desc: "University event website — AAINA, Babu Banarasi Das University", lang: "JavaScript", stars: 0, url: "https://github.com/iamharshit188/aainaXbbdu" },
         ];
 
+        // ─── ACCENT RESOLUTION (theme-aware — see CSS vars in <head>) ────────
+        const accentTextVar = { yellow: 'var(--accent-yellow-text)', pink: 'var(--accent-pink-text)', cyan: 'var(--accent-cyan-text)' };
+        const accentBorderVar = { yellow: 'var(--accent-yellow-border)', pink: 'var(--accent-pink-border)', cyan: 'var(--accent-cyan-border)' };
+
         // ─── SERVICE CARD ───────────────────────────────────────────────────
         const ServiceCard = ({ service, index }) => {
             const [hover, setHover] = useState(false);
             const Icn = service.icon;
+            const accent = accentTextVar[service.color];
+            const accentBorder = accentBorderVar[service.color];
             return (
                 <div className="service-card relative overflow-hidden"
-                     style={{borderTop:'1px solid var(--border)', borderTopColor: hover ? service.accent : 'var(--border)'}}
+                     style={{borderTop:'1px solid var(--border)', borderTopColor: hover ? accent : 'var(--border)'}}
                      onMouseEnter={() => setHover(true)}
                      onMouseLeave={() => setHover(false)}>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 font-display bg-proj-num select-none pointer-events-none hidden lg:block"
@@ -425,16 +443,16 @@
                     </div>
                     <div className="relative z-10 p-8 md:p-14 reveal">
                         <div className="flex items-center gap-3 mb-5">
-                            <span className="font-mono text-xs uppercase tracking-widest" style={{color: service.accent}}>0{index + 1}</span>
-                            <span className="w-8 h-px" style={{background: service.accent}}/>
-                            <Icn size={22} style={{color: service.accent}}/>
+                            <span className="font-mono text-xs uppercase tracking-widest" style={{color: accent}}>0{index + 1}</span>
+                            <span className="w-8 h-px" style={{background: accent}}/>
+                            <Icn size={22} style={{color: accent}}/>
                         </div>
 
                         <h3 className="font-display leading-[0.95] uppercase mb-3 max-w-3xl"
                             style={{fontSize:'clamp(1.75rem,4vw,3.25rem)', color:'var(--fg)'}}>
                             {service.title}
                         </h3>
-                        <p className="font-mono text-sm md:text-base mb-6 max-w-2xl" style={{color: service.accent}}>
+                        <p className="font-mono text-sm md:text-base mb-6 max-w-2xl" style={{color: accent}}>
                             {service.pitch}
                         </p>
 
@@ -451,8 +469,8 @@
                             {service.description}
                         </p>
 
-                        <div className="max-w-2xl border-l-4 pl-4 md:pl-5 py-1" style={{borderColor: service.accent + '60'}}>
-                            <div className="font-mono text-xs font-bold uppercase mb-1.5" style={{color: service.accent}}>
+                        <div className="max-w-2xl border-l-4 pl-4 md:pl-5 py-1" style={{borderColor: accentBorder}}>
+                            <div className="font-mono text-xs font-bold uppercase mb-1.5" style={{color: accent}}>
                                 {service.proof.label}
                             </div>
                             <p className="font-mono text-xs md:text-sm leading-relaxed" style={{color:'var(--fg45)'}}>
@@ -561,7 +579,7 @@
                             </div>
                             <div style={{overflow:'hidden', marginBottom:'2rem'}}>
                                 <div className="font-display leading-[0.88] uppercase"
-                                     style={{fontSize:'clamp(3rem,12vw,10rem)', color:'#EBFF00'}}>
+                                     style={{fontSize:'clamp(3rem,12vw,10rem)', color:'var(--accent-yellow-text)'}}>
                                     {'CAN BUILD'.split('').map((ch, i) => (
                                         <span key={i} style={{display:'inline-block', animation:`charSlideUp 0.75s cubic-bezier(0.16,1,0.3,1) ${0.45 + i * 0.04}s both`}}>{ch === ' ' ? ' ' : ch}</span>
                                     ))}
@@ -570,9 +588,9 @@
 
                             <p className="font-mono text-base md:text-lg max-w-2xl mb-10 leading-relaxed reveal" style={{color:'var(--fg50)'}}>
                                 Nine service lines, each backed by a shipped project — client work and my own —
-                                spanning <span style={{color:'#EBFF00'}} className="font-bold">full-stack product engineering</span>,{' '}
-                                <span style={{color:'#FF00FF'}} className="font-bold">applied AI/ML</span>, and{' '}
-                                <span style={{color:'#00FFFF'}} className="font-bold">low-level systems work</span> most
+                                spanning <span style={{color:'var(--accent-yellow-text)'}} className="font-bold">full-stack product engineering</span>,{' '}
+                                <span style={{color:'var(--accent-pink-text)'}} className="font-bold">applied AI/ML</span>, and{' '}
+                                <span style={{color:'var(--accent-cyan-text)'}} className="font-bold">low-level systems work</span> most
                                 full-stack freelancers don't offer.
                             </p>
 
@@ -613,7 +631,7 @@
                             ].map(({ num, suffix, label }) => (
                                 <div key={label} className="p-8 md:p-12 text-center reveal"
                                      style={{borderRight:'1px solid var(--border)', borderTop:'1px solid var(--border)'}}>
-                                    <div className="font-display text-5xl md:text-6xl mb-2 stat-num" style={{color:'#EBFF00'}}>
+                                    <div className="font-display text-5xl md:text-6xl mb-2 stat-num" style={{color:'var(--accent-yellow-text)'}}>
                                         <AnimCounter target={num} suffix={suffix}/>
                                     </div>
                                     <div className="font-mono uppercase tracking-widest" style={{fontSize:'10px', color:'var(--fg30)'}}>
@@ -627,7 +645,7 @@
                     {/* ── SERVICES ───────────────────────────────────────────── */}
                     <section id="services-list" className="pb-0">
                         <div className="px-6 md:px-10 max-w-7xl mx-auto pt-16 mb-12 reveal">
-                            <span className="font-mono section-label mb-3 block" style={{color:'#FF00FF'}}>002 — Service Menu</span>
+                            <span className="font-mono section-label mb-3 block" style={{color:'var(--accent-pink-text)'}}>002 — Service Menu</span>
                             <div className="flex justify-between items-end">
                                 <h2 className="font-display text-4xl md:text-6xl uppercase leading-none" style={{color:'var(--fg)'}}>
                                     Pick What<br/>You Need
@@ -646,7 +664,7 @@
                     {/* ── PROOF ON GITHUB ────────────────────────────────────── */}
                     <section className="py-24 px-6 md:px-10 max-w-7xl mx-auto" style={{borderTop:'1px solid var(--border)'}}>
                         <div className="reveal mb-12">
-                            <span className="font-mono section-label mb-3 block" style={{color:'#00FFFF'}}>003 — Proof, Not Promises</span>
+                            <span className="font-mono section-label mb-3 block" style={{color:'var(--accent-cyan-text)'}}>003 — Proof, Not Promises</span>
                             <div className="flex justify-between items-end flex-wrap gap-4">
                                 <h2 className="font-display text-4xl md:text-6xl uppercase leading-none" style={{color:'var(--fg)'}}>
                                     Straight From<br/>GitHub
@@ -663,7 +681,7 @@
                                 <a key={repo.name} href={repo.url} target="_blank" rel="noreferrer"
                                    className="repo-proof block border-[2px] p-4 transition-all"
                                    style={{borderColor:'var(--border)', background:'var(--bg-card2)', textDecoration:'none'}}
-                                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#EBFF00'; }}
+                                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-yellow-text)'; }}
                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}>
                                     <div className="flex items-start justify-between mb-2 gap-2">
                                         <h3 className="font-display text-sm uppercase leading-tight break-all" style={{color:'var(--fg)'}}>{repo.name}</h3>
@@ -697,7 +715,7 @@
                     {/* ── ENGAGEMENT MODELS ──────────────────────────────────── */}
                     <section className="py-24 px-6 md:px-10 max-w-7xl mx-auto" style={{borderTop:'1px solid var(--border)'}}>
                         <div className="reveal mb-16">
-                            <span className="font-mono section-label mb-3 block" style={{color:'#EBFF00'}}>004 — How We'd Work</span>
+                            <span className="font-mono section-label mb-3 block" style={{color:'var(--accent-yellow-text)'}}>004 — How We'd Work</span>
                             <h2 className="font-display text-4xl md:text-6xl uppercase leading-none" style={{color:'var(--fg)'}}>
                                 Engagement<br/>Models
                             </h2>
